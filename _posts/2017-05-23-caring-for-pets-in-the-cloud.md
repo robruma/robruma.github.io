@@ -6,7 +6,7 @@ author: robruma
 layout: post
 guid: https://invisiblerobots.org/?p=133
 permalink: /2017/05/23/caring-for-pets-in-the-cloud/
-categories:
+tags:
   - tech
 ---
 Pets vs. Cattle, the widely used <a href="http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/" target="_blank">phrase</a> forming the analogy between servers and animals is used consistently in the IT industry when automating infrastructure deployments or migrating applications to a cloud vendor.

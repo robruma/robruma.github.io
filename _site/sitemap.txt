@@ -7,7 +7,7 @@ https://invisiblerobots.org/rss.xml
 https://invisiblerobots.org/sitemap.txt
 https://invisiblerobots.org/tags
 
-https://invisiblerobots.org/jekyll/update/2017/10/welcome-to-jekyll.html
+https://invisiblerobots.org/2017/10/welcome-to-jekyll.html
 https://invisiblerobots.org/2017/06/24/finding-aws-cfn-bootstrap-hidden-selinux-violations/
 https://invisiblerobots.org/2017/05/23/caring-for-pets-in-the-cloud/
 https://invisiblerobots.org/2017/01/16/command-line-management-of-bluetooth-on-a-mac/

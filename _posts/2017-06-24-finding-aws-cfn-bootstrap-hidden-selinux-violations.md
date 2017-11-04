@@ -6,7 +6,7 @@ author: robruma
 layout: post
 guid: https://invisiblerobots.org/?p=169
 permalink: /2017/06/24/finding-aws-cfn-bootstrap-hidden-selinux-violations/
-categories:
+tags:
   - tech
 ---
 Using <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html" target="_blank">aws-cfn-bootstrap</a> helper scripts on Amazon Linux is really simple, straightforward and it comes pre-installed. However, using the helper scripts on a Red Hat variant has it&#8217;s challenges.

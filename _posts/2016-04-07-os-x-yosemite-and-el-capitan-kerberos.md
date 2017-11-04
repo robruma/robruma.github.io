@@ -6,7 +6,7 @@ author: robruma
 layout: post
 guid: http://invisiblerobots.org/?p=91
 permalink: /2016/04/07/os-x-yosemite-and-el-capitan-kerberos/
-categories:
+tags:
   - tech
 ---
 At one point in time, I used MIT Kerberos extensively throughout my workplace environment. LDAP was extended to use GSS-API and was extremely useful until this:

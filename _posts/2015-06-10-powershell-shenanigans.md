@@ -6,7 +6,7 @@ author: robruma
 layout: post
 guid: http://invisiblerobots.org/?p=19
 permalink: /2015/06/10/powershell-shenanigans/
-categories:
+tags:
   - whaa??
 ---
 Yeah, that&#8217;s right, I said [PowerShell!](http://en.wikipedia.org/wiki/Windows_PowerShell) The Schizophrenic scripting &#8220;language&#8221; that reminded me of Java, Perl, Bash, VB script and Windows command line all smashed together.

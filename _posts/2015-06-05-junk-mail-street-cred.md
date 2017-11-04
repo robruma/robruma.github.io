@@ -6,7 +6,7 @@ author: robruma
 layout: post
 guid: http://invisiblerobots.org/?p=17
 permalink: /2015/06/05/junk-mail-street-cred/
-categories:
+tags:
   - tech
 ---
 This complication began when I wanted to setup a Postfix mail system for this site and I figured I didn&#8217;t want to manage any users or mailboxes. I had this idea to only setup an inbound Postfix relay with local-only access. However, I only intended to use aliases pointing to external addresses with actual mailboxes to keep from storing mail on the instances. It was no surprise that I ran into a problem where some mail was getting dropped.

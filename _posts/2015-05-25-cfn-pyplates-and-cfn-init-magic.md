@@ -6,7 +6,7 @@ author: robruma
 layout: post
 guid: http://invisiblerobots.org/?p=11
 permalink: /2015/05/25/cfn-pyplates-and-cfn-init-magic/
-categories:
+tags:
   - tech
 ---
 For some, this information may be old hat, but for a while I&#8217;ve been looking for a good way to run cfn-init within UserData during an instance launch. I had a catch 22 scenario happening when building UserData with references to AWS::StackId because I&#8217;m using cfn-pyplates to build the CloudFormation json. Until recently, I couldn&#8217;t find a good way to use resource references while base64 encoding a build script in LaunchConfiguration&#8230;

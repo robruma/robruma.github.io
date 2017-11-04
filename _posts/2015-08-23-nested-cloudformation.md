@@ -6,7 +6,7 @@ author: robruma
 layout: post
 guid: https://invisiblerobots.org/?p=38
 permalink: /2015/08/23/nested-cloudformation/
-categories:
+tags:
   - tech
 ---
 It&#8217;s been a while since the last post, partially because I&#8217;m lazy. But also, life has been busy. I switched the site to a new <a href="https://github.com/robruma/ansible-wordpress" target="_blank">CMS</a> and <a href="https://theme.wordpress.com/themes/satellite/" target="_blank">theme</a> and a new way to <a href="http://www.google.com/adsense" target="_blank">pay the bills.</a> I&#8217;ve realized there&#8217;s no way to sustain this site effectively without some way to pay for the AWS resources once the free tier year is over. So, click some ads so I can keep it running!

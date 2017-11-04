@@ -6,7 +6,7 @@ author: robruma
 layout: post
 guid: https://invisiblerobots.org/?p=110
 permalink: /2016/08/19/google-authenticator-with-saltstack/
-categories:
+tags:
   - tech
 ---
 I&#8217;ve been working with <a href="https://saltstack.com/" target="_blank">SaltStack</a> for a few weeks now and am becoming a fan. I’ve written a fair amount of both Puppet and Ansible and know it’s not so simple to get started with either.

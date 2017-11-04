@@ -4,7 +4,7 @@
  <title>.invisible.robots</title>
  <link href="https://invisiblerobots.org/atom.xml" rel="self"/>
  <link href="https://invisiblerobots.org"/>
- <updated>2017-11-03T22:10:52-04:00</updated>
+ <updated>2017-11-03T22:25:56-04:00</updated>
  <id>https://invisiblerobots.org</id>
  <author>
    <name>Rob Ruma</name>
@@ -14,9 +14,9 @@
  
  <entry>
    <title>Welcome to Jekyll! Why Thank You</title>
-   <link href="https://invisiblerobots.org/jekyll/update/2017/10/welcome-to-jekyll.html"/>
+   <link href="https://invisiblerobots.org/2017/10/welcome-to-jekyll.html"/>
    <updated>2017-10-22T22:27:51-04:00</updated>
-   <id>https://invisiblerobots.org/jekyll/update/2017/10/welcome-to-jekyll</id>
+   <id>https://invisiblerobots.org/2017/10/welcome-to-jekyll</id>
    <content type="html">&lt;p&gt;Goodbye WordPress, Hello Jekyll.&lt;/p&gt;
 
 &lt;p&gt;I’m almost 100% migrated from AWS, although I’m still using SES, with a little help from CloudFlare and GitHub Pages and I’m getting a significant performance boost for free.&lt;/p&gt;
