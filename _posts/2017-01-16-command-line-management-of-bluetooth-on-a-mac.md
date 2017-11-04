@@ -7,7 +7,7 @@ layout: post
 guid: https://invisiblerobots.org/?p=124
 permalink: /2017/01/16/command-line-management-of-bluetooth-on-a-mac/
 tags:
-  - newb
+  - noob
 ---
 Have you ever been a situation where your good intentions backfire.
 

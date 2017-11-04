@@ -7,7 +7,7 @@ layout: post
 guid: http://invisiblerobots.org/?p=6
 permalink: /2015/05/20/the-blogs-up/
 tags:
-  - newb
+  - noob
 ---
 Finally! Hello World! It&#8217;s about time something made it to the interwebs from this site&#8230; Even though it still looks pretty bare, I&#8217;m kinda digging the clean look of this CMS. You can find it on <a href="https://github.com/anchorcms/anchor-cms">https://github.com/anchorcms/anchor-cms</a> if you&#8217;re interested.
 
