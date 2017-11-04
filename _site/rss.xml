@@ -5,8 +5,8 @@
         <description>.invisible.robots - Rob Ruma</description>
         <link>https://invisiblerobots.org</link>
         <atom:link href="https://invisiblerobots.org/rss.xml" rel="self" type="application/rss+xml" />
-        <lastBuildDate>Fri, 03 Nov 2017 21:13:11 -0400</lastBuildDate>
-        <pubDate>Fri, 03 Nov 2017 21:13:11 -0400</pubDate>
+        <lastBuildDate>Fri, 03 Nov 2017 22:03:46 -0400</lastBuildDate>
+        <pubDate>Fri, 03 Nov 2017 22:03:46 -0400</pubDate>
         <ttl>60</ttl>
 
 
@@ -1690,59 +1690,31 @@ user_data_script = join('', interpreter, default_region, cfn_init_cmd, build_scr
 
         <item>
                 <title>The blog&amp;#8217;s up!</title>
-                <description>&lt;div class=&quot;container post-content&quot;&gt;
-  &lt;p&gt;
-    Finally! Hello World! It&amp;#8217;s about time something made it to the interwebs from this site&amp;#8230; Even though it still looks pretty bare, I&amp;#8217;m kinda digging the clean look of this CMS. You can find it on &lt;a href=&quot;https://github.com/anchorcms/anchor-cms&quot;&gt;https://github.com/anchorcms/anchor-cms&lt;/a&gt; if you&amp;#8217;re interested.
-  &lt;/p&gt;
-  
-  &lt;p&gt;
-    For the record, I&amp;#8217;m beginning somewhat of a journey (late as it may be) of working with cloud enabled services for my employer. My group has been tasked with moving a shitload of applications (600+) into the ever-changing cloud. Some homegrown Java and Python apps and some prepackaged and licensed by those huge corporations (you know the ones I&amp;#8217;m talking about). I figure I&amp;#8217;m gonna learn a lot and make a ton of mistakes. What better way to immortalize my successes and failures than to share with other nerds like me.
-  &lt;/p&gt;
-  
-  &lt;p&gt;
-    I&amp;#8217;m going to try to document as many adventures I come across regarding tools, automation and technologies used in cloud services and whatever interesting past, present and future experiences. I&amp;#8217;m aiming at being as platform agnostic as possible since I may not have a choice about the application that gets to move next. Hopefully I can come up with some good knowledge to share but first, I decided to start right here with this site, which is fully operational in AWS.
-  &lt;/p&gt;
-  
-  &lt;p&gt;
-    I&amp;#8217;m woking on getting an SSL cert for this site thats actually trusted but for now I&amp;#8217;m gonna get by with a busted self-signed cert. I came across a few services that offer free SSL but as you might imagine, they all have advantages and drawbacks.
-  &lt;/p&gt;
-  
-  &lt;p&gt;
-    Here are a few I&amp;#8217;m considering:
-  &lt;/p&gt;
-  
-  &lt;ul&gt;
-    &lt;li&gt;
-      &lt;a href=&quot;http://www.cacert.org/&quot;&gt;http://www.cacert.org/&lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li&gt;
-      &lt;a href=&quot;https://www.startssl.com/&quot;&gt;https://www.startssl.com/&lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li&gt;
-      &lt;a href=&quot;https://www.instantssl.com/free-ssl-certificate.html&quot;&gt;https://www.instantssl.com/free-ssl-certificate.html&lt;/a&gt;
-    &lt;/li&gt;
-  &lt;/ul&gt;
-  
-  &lt;p&gt;
-    Some of these only give you a 30 or 90 day trial certificate which is a good start but Im looking for something more permanent considering the frugality this site will be shooting for&amp;#8230; $0
-  &lt;/p&gt;
-  
-  &lt;p&gt;
-    I also ran across this interesting project with appears to be quite promising:
-  &lt;/p&gt;
-  
-  &lt;p&gt;
-    &lt;a href=&quot;https://letsencrypt.org/&quot;&gt;https://letsencrypt.org/&lt;/a&gt;
-  &lt;/p&gt;
-  
-  &lt;p&gt;
-    It&amp;#8217;s backed by some big name sponsors like the Linux Foundation and promises to be open. It&amp;#8217;s not officially available until sometime in the middle of 2015 but it&amp;#8217;s on the right track.
-  &lt;/p&gt;
-  
-  &lt;p&gt;
-    That&amp;#8217;s all I got for now&amp;#8230;
-  &lt;/p&gt;
-&lt;/div&gt;
+                <description>&lt;p&gt;Finally! Hello World! It’s about time something made it to the interwebs from this site… Even though it still looks pretty bare, I’m kinda digging the clean look of this CMS. You can find it on &lt;a href=&quot;https://github.com/anchorcms/anchor-cms&quot;&gt;https://github.com/anchorcms/anchor-cms&lt;/a&gt; if you’re interested.&lt;/p&gt;
+
+&lt;p&gt;For the record, I’m beginning somewhat of a journey (late as it may be) of working with cloud enabled services for my employer. My group has been tasked with moving a shitload of applications (600+) into the ever-changing cloud. Some homegrown Java and Python apps and some prepackaged and licensed by those huge corporations (you know the ones I’m talking about). I figure I’m gonna learn a lot and make a ton of mistakes. What better way to immortalize my successes and failures than to share with other nerds like me.&lt;/p&gt;
+
+&lt;p&gt;I’m going to try to document as many adventures I come across regarding tools, automation and technologies used in cloud services and whatever interesting past, present and future experiences. I’m aiming at being as platform agnostic as possible since I may not have a choice about the application that gets to move next. Hopefully I can come up with some good knowledge to share but first, I decided to start right here with this site, which is fully operational in AWS.&lt;/p&gt;
+
+&lt;p&gt;I’m woking on getting an SSL cert for this site thats actually trusted but for now I’m gonna get by with a busted self-signed cert. I came across a few services that offer free SSL but as you might imagine, they all have advantages and drawbacks.&lt;/p&gt;
+
+&lt;p&gt;Here are a few I’m considering:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.cacert.org/&quot;&gt;http://www.cacert.org/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.startssl.com/&quot;&gt;https://www.startssl.com/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.instantssl.com/free-ssl-certificate.html&quot;&gt;https://www.instantssl.com/free-ssl-certificate.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Some of these only give you a 30 or 90 day trial certificate which is a good start but Im looking for something more permanent considering the frugality this site will be shooting for… $0&lt;/p&gt;
+
+&lt;p&gt;I also ran across this interesting project with appears to be quite promising:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://letsencrypt.org/&quot;&gt;https://letsencrypt.org/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;It’s backed by some big name sponsors like the Linux Foundation and promises to be open. It’s not officially available until sometime in the middle of 2015 but it’s on the right track.&lt;/p&gt;
+
+&lt;p&gt;That’s all I got for now…&lt;/p&gt;
 </description>
                 <link>https://invisiblerobots.org/2015/05/20/the-blogs-up/</link>
                 <guid>https://invisiblerobots.org/2015/05/20/the-blogs-up</guid>
