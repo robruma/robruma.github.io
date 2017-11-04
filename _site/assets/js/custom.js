@@ -42,7 +42,7 @@ function searchHandler() {
     //window.open("https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text, "_blank");
 }
 
-function() {
+(function() {
     var cx = '007797272485922345229:nrls_zubomg';
     var gcse = document.createElement('script');
     gcse.type = 'text/javascript';
@@ -50,4 +50,4 @@ function() {
     gcse.src = 'https://cse.google.com/cse.js?cx=' + cx;
     var s = document.getElementsByTagName('script')[0];
     s.parentNode.insertBefore(gcse, s);
-}();
+})();
