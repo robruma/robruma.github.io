@@ -81,7 +81,7 @@ JB :
   comments :
     provider : disqus
     disqus :
-      short_name : robruma
+      short_name : invisiblerobots-org
    
   # Settings for analytics helper
   # Set 'provider' to the analytics provider you want to use.
