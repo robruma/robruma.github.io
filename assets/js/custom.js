@@ -39,5 +39,12 @@ function searchHandler() {
     var text = searchInput.value;
     // add site:example.com in the placeholder
     //window.location.href = "https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text;
-    window.open("https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text, "_blank");
+    //window.open("https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text, "_blank");
+    var cx = '007797272485922345229:nrls_zubomg&q=' + text;
+    var gcse = document.createElement('script');
+    gcse.type = 'text/javascript';
+    gcse.async = true;
+    gcse.src = 'https://cse.google.com/cse.js?cx=' + cx;
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(gcse, s);
 }
