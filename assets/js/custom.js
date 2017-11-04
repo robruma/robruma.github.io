@@ -45,6 +45,6 @@ function searchHandler() {
     gcse.type = 'text/javascript';
     gcse.async = true;
     gcse.src = 'https://cse.google.com/cse.js?cx=' + cx;
-    var s = document.getElementsById('search-text')[0];
+    var s = document.getElementById('search-text')[0];
     s.parentNode.insertBefore(gcse, s);
 }
