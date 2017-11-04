@@ -37,6 +37,7 @@ document.getElementById("search-text").addEventListener("keydown", function(e) {
 function searchHandler() {
     var searchInput = document.getElementById('search-text');
     var text = searchInput.value;
+    window.location.target = "_blank";
     // add site:example.com in the placeholder
     window.location.href = "https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text;
 }
