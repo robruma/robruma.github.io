@@ -3,8 +3,7 @@ layout: post
 title:  "Welcome to Jekyll! Why Thank You"
 date:   2017-10-22 22:27:51 -0400
 tags:
- - jekyll
- - update
+ - tech
 ---
 Goodbye WordPress, Hello Jekyll.
 
