@@ -49,4 +49,6 @@ function searchHandler() {
     // add site:example.com in the placeholder
     //window.location.href = "https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text;
     //window.open("https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text, "_blank");
+    var element = google.search.cse.element.getElement('script');
+    element.execute(text);
 }
