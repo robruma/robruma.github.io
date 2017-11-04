@@ -1,0 +1,1760 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+        <title>.invisible.robots</title>
+        <description>.invisible.robots - Rob Ruma</description>
+        <link>https://invisiblerobots.org</link>
+        <atom:link href="https://invisiblerobots.org/rss.xml" rel="self" type="application/rss+xml" />
+        <lastBuildDate>Fri, 03 Nov 2017 19:36:49 -0400</lastBuildDate>
+        <pubDate>Fri, 03 Nov 2017 19:36:49 -0400</pubDate>
+        <ttl>60</ttl>
+
+
+        <item>
+                <title>Welcome to Jekyll!</title>
+                <description>&lt;p&gt;You’ll find this post in your &lt;code class=&quot;highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code class=&quot;highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
+
+&lt;p&gt;To add new posts, simply add a file in the &lt;code class=&quot;highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory that follows the convention &lt;code class=&quot;highlighter-rouge&quot;&gt;YYYY-MM-DD-name-of-post.ext&lt;/code&gt; and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
+
+&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Tom'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints 'Hi, Tom' to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Check out the &lt;a href=&quot;https://jekyllrb.com/docs/home&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://talk.jekyllrb.com/&quot;&gt;Jekyll Talk&lt;/a&gt;.&lt;/p&gt;
+
+</description>
+                <link>https://invisiblerobots.org/jekyll/update/2017/10/welcome-to-jekyll.html</link>
+                <guid>https://invisiblerobots.org/jekyll/update/2017/10/welcome-to-jekyll</guid>
+                <pubDate>Sun, 22 Oct 2017 22:27:51 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>Finding aws-cfn-bootstrap hidden SELinux violations</title>
+                <description>&lt;p&gt;Using &lt;a href=&quot;http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html&quot; target=&quot;_blank&quot;&gt;aws-cfn-bootstrap&lt;/a&gt; helper scripts on Amazon Linux is really simple, straightforward and it comes pre-installed. However, using the helper scripts on a Red Hat variant has it’s challenges.&lt;/p&gt;
+
+&lt;p&gt;One such challenge is installation of the helper scripts on RHEL/CentOS 7. Trying to install the &lt;a href=&quot;https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.amzn1.noarch.rpm&quot; target=&quot;_blank&quot;&gt;RPM&lt;/a&gt; does not work out of the box. Running one of the scripts yields:&lt;/p&gt;
+
+&lt;pre&gt;# ./cfn-init 
+Traceback (most recent call last):
+  File &quot;./cfn-init&quot;, line 19, in &amp;lt;module&amp;gt;
+    import cfnbootstrap
+ImportError: No module named cfnbootstrap
+&lt;/pre&gt;
+
+&lt;p&gt;I have not found a way to install the missing Python module directly from pip but installing the helper scripts from the provided tarball works much better:&lt;/p&gt;
+
+&lt;pre&gt;/usr/bin/easy_install --script-dir /opt/aws/bin https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+&lt;/pre&gt;
+
+&lt;p&gt;Now, I believe I have a working installation of the helper scripts… Until I try attempting the next challenge… Configuring a hook that executes a command other than the standard &lt;code class=&quot;highlighter-rouge&quot;&gt;/opt/aws/bin/cfn-init --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}&lt;/code&gt; command which is intended to re-execute the user-data on changes to the stack resource’s metadata:&lt;/p&gt;
+
+&lt;pre&gt;/etc/cfn/hooks.d/cfn-user-data.conf:
+  content:
+    Fn::Sub: |
+      [cfn-user-data-hook]
+      triggers=post.update
+      path=Resources.EC2Instance.Metadata.AWS::CloudFormation::Init
+      action=/bin/curl -sf http://169.254.169.254/latest/user-data | bash -x
+      runas=root
+  mode: '000400'
+  owner: root
+  group: root
+&lt;/pre&gt;
+
+&lt;p&gt;So… I run some more tests and determine the user-data was not re-executed as I intended.&lt;/p&gt;
+
+&lt;p&gt;I start troubleshooting and there’s nothing obvious in logs. Which is confusing because running cfn-init as a one-shot command creates files described in metadata… WTH is going on.&lt;/p&gt;
+
+&lt;p&gt;Finally, I realize SELinux is in enforcing mode. I run &lt;code class=&quot;highlighter-rouge&quot;&gt;setenforce 0&lt;/code&gt; and magically, all is well.&lt;/p&gt;
+
+&lt;p&gt;The simplest fix would be to run a command to &lt;a href=&quot;https://stopdisablingselinux.com/&quot; target=&quot;_blank&quot;&gt;permanently disable SELinux&lt;/a&gt; system wide and put the whole problem behind me, but this way of thinking has the potential of causing countless other problems…&lt;/p&gt;
+
+&lt;p&gt;So, I decided to dig in and figure out why SELinux is preventing the execution of commands other than cfn-init.&lt;/p&gt;
+
+&lt;p&gt;First thought — setroubleshoot — Yes, this should be simple…&lt;/p&gt;
+
+&lt;p&gt;I re-enable SELinux, install setroubleshoot and run tests once again and the failure returns.&lt;/p&gt;
+
+&lt;p&gt;But when I try to find the violation in the audit logs, I get this:&lt;/p&gt;
+
+&lt;pre&gt;# sealert -a /var/log/audit/audit.log 
+100% done
+found 0 alerts in /var/log/audit/audit.log
+&lt;/pre&gt;
+
+&lt;p&gt;Whaaaa??&lt;/p&gt;
+
+&lt;p&gt;I actually have never run into this before… Typically, SELinux is good about logging reasons why commands and processes are denied execution. So now I’m in un-charted territory. Until a lengthy Google-ing session uncovered this process to &lt;a href=&quot;https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Security-Enhanced_Linux/sect-Security-Enhanced_Linux-Fixing_Problems-Possible_Causes_of_Silent_Denials.html&quot; target=&quot;_blank&quot;&gt;disable dontaudit rules&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I execute:&lt;/p&gt;
+
+&lt;pre&gt;semodule -DB
+&lt;/pre&gt;
+
+&lt;p&gt;And re-execute some test changes through a stack update and I start seeing some violations in the audit log:&lt;/p&gt;
+
+&lt;pre&gt;--------------------------------------------------------------------------------
+
+SELinux is preventing /usr/bin/bash from using the rlimitinh access on a process.
+
+*****  Plugin catchall (100. confidence) suggests   **************************
+
+If you believe that bash should be allowed rlimitinh access on processes labeled initrc_t by default.
+Then you should report this as a bug.
+You can generate a local policy module to allow this access.
+Do
+allow this access for now by executing:
+# ausearch -c '00-netreport' --raw | audit2allow -M my-00netreport
+# semodule -i my-00netreport.pp
+
+--------------------------------------------------------------------------------
+
+SELinux is preventing /usr/bin/python2.7 from using the rlimitinh access on a process.
+
+*****  Plugin catchall (100. confidence) suggests   **************************
+
+If you believe that python2.7 should be allowed rlimitinh access on processes labeled setroubleshootd_t by default.
+Then you should report this as a bug.
+You can generate a local policy module to allow this access.
+Do
+allow this access for now by executing:
+# ausearch -c 'setroubleshootd' --raw | audit2allow -M my-setroubleshootd
+# semodule -i my-setroubleshootd.pp
+&lt;/pre&gt;
+
+&lt;p&gt;Ok, this is something but still not very useful… The suggestions to allow the access do not directly reference any of the commands I’m running so I’m skeptical that creating the policies to allow “rlimitinh access on processes” will work.&lt;/p&gt;
+
+&lt;p&gt;I found a &lt;a href=&quot;https://bugzilla.redhat.com/show_bug.cgi?id=1183659&quot; target=&quot;_blank&quot;&gt;bug report&lt;/a&gt; of a similar error which gave me the idea that I may have a filesystem label problem. Ok, easy enough, I run this:&lt;/p&gt;
+
+&lt;pre&gt;# restorecon -R -v /usr
+restorecon reset /usr/lib/python2.7/site-packages/aws_cfn_bootstrap-1.4-py2.7.egg/EGG-INFO/scripts context system_u:object_r:lib_t:s0-&amp;gt;system_u:object_r:bin_t:s0
+restorecon reset /usr/lib/python2.7/site-packages/aws_cfn_bootstrap-1.4-py2.7.egg/EGG-INFO/scripts/cfn-init context system_u:object_r:lib_t:s0-&amp;gt;system_u:object_r:bin_t:s0
+restorecon reset /usr/lib/python2.7/site-packages/aws_cfn_bootstrap-1.4-py2.7.egg/EGG-INFO/scripts/cfn-signal context system_u:object_r:lib_t:s0-&amp;gt;system_u:object_r:bin_t:s0
+restorecon reset /usr/lib/python2.7/site-packages/aws_cfn_bootstrap-1.4-py2.7.egg/EGG-INFO/scripts/cfn-get-metadata context system_u:object_r:lib_t:s0-&amp;gt;system_u:object_r:bin_t:s0
+restorecon reset /usr/lib/python2.7/site-packages/aws_cfn_bootstrap-1.4-py2.7.egg/EGG-INFO/scripts/cfn-hup context system_u:object_r:lib_t:s0-&amp;gt;system_u:object_r:bin_t:s0
+restorecon reset /usr/lib/python2.7/site-packages/aws_cfn_bootstrap-1.4-py2.7.egg/EGG-INFO/scripts/cfn-elect-cmd-leader context system_u:object_r:lib_t:s0-&amp;gt;system_u:object_r:bin_t:s0
+restorecon reset /usr/lib/python2.7/site-packages/aws_cfn_bootstrap-1.4-py2.7.egg/EGG-INFO/scripts/cfn-send-cmd-result context system_u:object_r:lib_t:s0-&amp;gt;system_u:object_r:bin_t:s0
+restorecon reset /usr/lib/python2.7/site-packages/aws_cfn_bootstrap-1.4-py2.7.egg/EGG-INFO/scripts/cfn-send-cmd-event context system_u:object_r:lib_t:s0-&amp;gt;system_u:object_r:bin_t:s0
+&lt;/pre&gt;
+
+&lt;p&gt;Well, ain’t that something, I relabeled all the files installed by the aws-cfn-bootstrap tarball.&lt;/p&gt;
+
+&lt;p&gt;The commands now execute properly so I add this relabel command as part of the install process for aws-cfn-bootstrap.&lt;/p&gt;
+
+&lt;p&gt;PS, if you’ve followed along so far, don’t forget to re-enable the dontaudit rules:&lt;/p&gt;
+
+&lt;pre&gt;semodule -B
+&lt;/pre&gt;
+
+&lt;p&gt;So the audit logs don’t fill up with garbage.&lt;/p&gt;
+</description>
+                <link>https://invisiblerobots.org/2017/06/24/finding-aws-cfn-bootstrap-hidden-selinux-violations/</link>
+                <guid>https://invisiblerobots.org/2017/06/24/finding-aws-cfn-bootstrap-hidden-selinux-violations</guid>
+                <pubDate>Sat, 24 Jun 2017 10:16:10 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>Caring for Pets in the Cloud</title>
+                <description>&lt;p&gt;Pets vs. Cattle, the widely used &lt;a href=&quot;http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/&quot; target=&quot;_blank&quot;&gt;phrase&lt;/a&gt; forming the analogy between servers and animals is used consistently in the IT industry when automating infrastructure deployments or migrating applications to a cloud vendor.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i0.wp.com/image.slidesharecdn.com/cloudconnect2012-architectures-for-open-and-scalable-clouds-master-rlb-120216195430-phpapp01/95/architectures-for-open-and-scalable-clouds-20-728.jpg?resize=728%2C546&amp;#038;ssl=1&quot; class=&quot;aligncenter size-medium&quot; data-recalc-dims=&quot;1&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As System Engineers, Architects and Developers struggle to turn pets into cattle, the underlying application, more than likely, will not be initially architected to take advantage of scalability features. Features like stateless application architecture takes time to become reality and often overrun the time it takes for infrastructure architecture changes. Immutability of servers is not easy either. It starts with how the application is architected. Then, can leverage multiple layers of infrastructure automation, operating system configuration management, acceptance testing, software deployments, continuous integration, etc…&lt;/p&gt;
+
+&lt;p&gt;This may mean expecting extra cost, time and effort when taking a beautifully hand-crafted snowflake application, crossing your fingers and just throwing it into the cloud. Especially if you’re hoping the &lt;a href=&quot;http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-retirement.html&quot; target=&quot;_blank&quot;&gt;underlying services&lt;/a&gt; continue to function at the &lt;a href=&quot;https://aws.amazon.com/message/41926/&quot; target=&quot;_blank&quot;&gt;guaranteed uptime SLA&lt;/a&gt; while concurrent efforts to develop cloud native versions or a potential replacement application begin to take shape.&lt;/p&gt;
+
+&lt;p&gt;AWS has answered this situation with &lt;a href=&quot;https://aws.amazon.com/blogs/aws/new-auto-recovery-for-amazon-ec2/&quot; target=&quot;_blank&quot;&gt;AutoRecovery&lt;/a&gt; which is preferable to an AutoScaling group set to one desired/max instance. Although, an instance stop/start will move your instance to another host, &lt;a href=&quot;https://forums.aws.amazon.com/thread.jspa?threadID=72906&quot; target=&quot;_blank&quot;&gt;AWS does not support live migration&lt;/a&gt;. Caveats include the risk of volume corruption and loss of public IP’s so ensure your instance has an Elastic IP or is behind and ELB and the important data is backed up or &lt;a href=&quot;https://aws.amazon.com/answers/infrastructure-management/ebs-snapshot-scheduler/&quot; target=&quot;_blank&quot;&gt;regular EBS snapshots are taken&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Google Cloud mitigates instance retirement with &lt;a href=&quot;https://cloud.google.com/compute/docs/regions-zones/regions-zones#maintenance&quot; target=&quot;_blank&quot;&gt;Transparent Maintenance&lt;/a&gt; which, as the name suggests, is transparent and requires no additional configuration. By default, instances will “live migrate” to healthy hardware but can be configured to “terminate and reboot” if the application requires.&lt;/p&gt;
+
+&lt;p&gt;Azure doesn’t seem to have &lt;a href=&quot;https://docs.microsoft.com/en-us/azure/virtual-machines/windows/impactful-maintenance&quot; target=&quot;_blank&quot;&gt;equivalent functionality&lt;/a&gt; but has technology in place that enables the underlying virtualization to be updated without a VM reboot, however, will experience a &lt;a href=&quot;https://azure.microsoft.com/en-us/updates/azure-in-place-virtual-machine-migration-eliminates-virtual-machine-reboots-during-critical-security-updates-for-host-os/&quot; target=&quot;_blank&quot;&gt;30 second pause&lt;/a&gt;. This does not solve the problem of &lt;a href=&quot;https://docs.microsoft.com/en-us/azure/architecture/resiliency/recovery-local-failures&quot; target=&quot;_blank&quot;&gt;underlying hardware failures&lt;/a&gt; which Azure recommends using multiple instances and ensure an &lt;a href=&quot;https://azure.microsoft.com/en-us/support/legal/sla/virtual-machines/v1_6/&quot; target=&quot;_blank&quot;&gt;SLA of 99.9% for single instance deployments&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Be sure to make the right decisions regarding your pets. Research the available options and plan for failure. Turning a kitten into a cow isn’t easy.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://imgflip.com/i/1pkanm&quot;&gt;&lt;img src=&quot;https://i2.wp.com/i.imgflip.com/1pkanm.jpg?ssl=1&quot; title=&quot;made at imgflip.com&quot; data-recalc-dims=&quot;1&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+</description>
+                <link>https://invisiblerobots.org/2017/05/23/caring-for-pets-in-the-cloud/</link>
+                <guid>https://invisiblerobots.org/2017/05/23/caring-for-pets-in-the-cloud</guid>
+                <pubDate>Tue, 23 May 2017 06:37:35 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>Command Line Management of Bluetooth on a Mac</title>
+                <description>&lt;p&gt;Have you ever been a situation where your good intentions backfire.&lt;/p&gt;
+
+&lt;p&gt;For instance, when all you wanted to do was disconnect a Bluetooth headset and end up disconnecting all Bluetooth devices… Ahem… Like your mouse…&lt;/p&gt;
+
+&lt;p&gt;I know, it’s a bonehead move and I had this exact experience because I was in a hurry.&lt;/p&gt;
+
+&lt;p&gt;“Yep, sure, disconnect all Bluetooth devices” I said to myself as I read the warning out loud… oops… this does include the mouse I’m using at this moment. FFS…&lt;/p&gt;
+
+&lt;p&gt;Ok, now what… I have no mouse to click the stupid toolbar option to turn Bluetooth back on.&lt;/p&gt;
+
+&lt;p&gt;Try the keyboard, nope, no hotkey, not even in System Preferences.&lt;/p&gt;
+
+&lt;p&gt;So I start Googling on my phone to try to figure this put and discovered &lt;a href=&quot;http://apple.stackexchange.com/questions/47503/how-to-control-bluetooth-wireless-radio-from-the-command-line&quot; target=&quot;_blank&quot;&gt;blueutil&lt;/a&gt;!&lt;/p&gt;
+
+&lt;p&gt;This slick little tool put me back in business in under 30 seconds so I thought it was worth a post to give some props.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;brew install blueutil&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;blueutil power 1&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Good lookin out &lt;a href=&quot;https://github.com/toy/blueutil&quot; target=&quot;_blank&quot;&gt;Frederik Seiffert&lt;/a&gt;!&lt;/p&gt;
+</description>
+                <link>https://invisiblerobots.org/2017/01/16/command-line-management-of-bluetooth-on-a-mac/</link>
+                <guid>https://invisiblerobots.org/2017/01/16/command-line-management-of-bluetooth-on-a-mac</guid>
+                <pubDate>Mon, 16 Jan 2017 10:29:16 -0500</pubDate>
+        </item>
+
+        <item>
+                <title>Google Authenticator with SaltStack</title>
+                <description>&lt;p&gt;I’ve been working with &lt;a href=&quot;https://saltstack.com/&quot; target=&quot;_blank&quot;&gt;SaltStack&lt;/a&gt; for a few weeks now and am becoming a fan. I’ve written a fair amount of both Puppet and Ansible and know it’s not so simple to get started with either.&lt;/p&gt;
+
+&lt;p&gt;Puppet’s &lt;a href=&quot;https://en.wikipedia.org/wiki/Domain-specific_language&quot; target=&quot;_blank&quot;&gt;DSL&lt;/a&gt; is &lt;a href=&quot;https://docs.puppet.com/puppet/latest/reference/lang_summary.html&quot; target=&quot;_blank&quot;&gt;daunting&lt;/a&gt; to some people so the alternative to writing configuration management code defaults to Ansible because of it’s popularity. Some say &lt;a href=&quot;http://docs.ansible.com/ansible/&quot; target=&quot;_blank&quot;&gt;Ansible is easier&lt;/a&gt; to understand, but introduces a suspicious &lt;a href=&quot;https://www.ansible.com/tower&quot; target=&quot;_blank&quot;&gt;lock-in&lt;/a&gt; factor… You be the judge.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;My opinion…&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;In a nutshell, compared to Puppet and Ansible, Salt is the best of both worlds without a huge time and financial investment. You get the simplicity of writing configuration management code in YAML yet not bound by a full DSL and have all the power of Python. With that said, I don’t want to get into a full side-by-side-by-side comparison of these three tools. There are plenty of &lt;a href=&quot;http://lmgtfy.com/?q=salt+vs+puppet+vs+ansible&quot; target=&quot;_blank&quot;&gt;comparisons&lt;/a&gt; out there to let you decide which is right for the task at hand. I’m just gonna show you how easy it is with Salt.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Using Augeas to manage PAM&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;I’ve jumped on the &lt;a href=&quot;https://en.wikipedia.org/wiki/Multi-factor_authentication&quot; target=&quot;_blank&quot;&gt;MFA&lt;/a&gt; band wagon (and you should too) and started using &lt;a href=&quot;https://github.com/google/google-authenticator&quot; target=&quot;_blank&quot;&gt;Google Authenticator&lt;/a&gt; for SSH. Atfirst, it seemed like it wasn’t ready for prime time for CentOS. I read a few blog posts about how to set Google Authenticator up and they all used a Debian flavor OS because the PAM module is neatly packaged and available though standard repositories. Not CentOS… What I read used a tarball of the source code, locally compiled and installed using the install method of the Makefile. I really wanted to enable CentOS’ default package management system to handle the PAM module install so I built my own RPM. Which is simpler than it sounds, It’s all detailed &lt;a href=&quot;https://github.com/google/google-authenticator/blob/master/libpam/contrib/README.rpm.md&quot; target=&quot;_blank&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;After a successful &lt;a href=&quot;http://www.rpm.org/max-rpm-snapshot/rpmbuild.8.html&quot; target=&quot;_blank&quot;&gt;rpmbuild&lt;/a&gt;, I had a shiny new RPM package, with the possibility of being managed by yum, that was installable without having to install compilation tools which having available pose a security risk.&lt;/p&gt;
+
+&lt;p&gt;Using Salt, I was able to use the built-in package management &lt;a href=&quot;https://docs.saltstack.com/en/latest/ref/states/all/salt.states.pkg.html&quot; target=&quot;_blank&quot;&gt;state module&lt;/a&gt; to install the PAM module. Win!&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Now off to configuration…&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;I’m not gonna detail how to setup a Salt master environment here, there are plenty of &lt;a href=&quot;https://docs.saltstack.com/en/latest/topics/tutorials/walkthrough.html&quot; target=&quot;_blank&quot;&gt;resources&lt;/a&gt; out there to help you with all the different options that are right for you. Let’s just assume you have a master and are able to orchestrate the &lt;a href=&quot;https://docs.saltstack.com/en/latest/ref/modules/all/salt.modules.state.html&quot; target=&quot;_blank&quot;&gt;highstate&lt;/a&gt; on your minions.&lt;/p&gt;
+
+&lt;p&gt;Augeas is pretty much the de facto standard in most configuration management tools to handle updates to any text based configuration files. Not surprising to see Salt is embracing this method and look forward to full &lt;a href=&quot;https://docs.saltstack.com/en/latest/ref/states/all/salt.states.augeas.html&quot; target=&quot;_blank&quot;&gt;support&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The code below should modify &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/pam.d/sshd&lt;/code&gt; to insert the &lt;code class=&quot;highlighter-rouge&quot;&gt;pam_google_authenticator.so&lt;/code&gt; module line after the &lt;code class=&quot;highlighter-rouge&quot;&gt;pam_sepermit.so&lt;/code&gt; line and remove the &lt;code class=&quot;highlighter-rouge&quot;&gt;password-auth&lt;/code&gt; line since I don’t use password authentication. You may want to consider leaving the &lt;code class=&quot;highlighter-rouge&quot;&gt;password-auth&lt;/code&gt; line if you actually use password authentication.&lt;/p&gt;
+
+&lt;pre&gt;pam_ins_google_authenticator:
+  augeas.change:
+    - context: /files/etc/pam.d/sshd
+    - changes:
+      - ins 999 after &quot;*[type = 'auth'][control = 'required'][module = 'pam_sepermit.so']&quot;
+      - set 999/type auth
+      - set 999/control required
+      - set 999/module pam_google_authenticator.so
+    - unless: grep -Eq '^auth[[:blank:]]*required[[:blank:]]*pam_google_authenticator.so$' /etc/pam.d/sshd
+
+pam_rm_password-auth:
+  augeas.change:
+    - context: /files/etc/pam.d/sshd
+    - changes:
+      - rm &quot;*[type = 'auth'][control = 'substack'][module = 'password-auth']&quot;
+    - onlyif: grep -Eq '^auth[[:blank:]]*substack[[:blank:]]*password-auth$' /etc/pam.d/sshd
+&lt;/pre&gt;
+
+&lt;p&gt;I also needed to make a few adjustments to &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/ssh/sshd_config&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The code below should insert (or update) two lines in &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/ssh/sshd_config&lt;/code&gt; that control SSH support for keyboard-interactive authentication. You need this to allow sshd to prompt for the validation code needed by the Google Authenticator service. Again, I use publickey authentication and not password so you may need to adjust the &lt;code class=&quot;highlighter-rouge&quot;&gt;AuthenticationMethods&lt;/code&gt; to your environment.&lt;/p&gt;
+
+&lt;pre&gt;sshd_config_enable_ChallengeResponse:
+  augeas.change:
+    - context: /files/etc/ssh/sshd_config
+    - changes:
+      - set ChallengeResponseAuthentication yes
+    - unless: grep -Eq '^ChallengeResponseAuthentication yes$' /etc/ssh/sshd_config
+    - watch_in:
+      - service: sshd
+
+sshd_config_enable_AuthenticationMethods:
+  augeas.change:
+    - context: /files/etc/ssh/sshd_config
+    - changes:
+      - set AuthenticationMethods publickey,keyboard-interactive
+    - unless: grep -Eq '^AuthenticationMethods publickey,keyboard-interactive$' /etc/ssh/sshd_config
+    - watch_in:
+      - service: sshd
+&lt;/pre&gt;
+
+&lt;p&gt;Now run salt to apply the highstate to the minion. Assuming you’ve created additional states to manage the package install, this should configure PAM and sshd properly.&lt;/p&gt;
+
+&lt;p&gt;**&lt;/p&gt;
+
+&lt;p&gt;PAM and sshd is configured… Now what?&lt;/p&gt;
+
+&lt;p&gt;**&lt;/p&gt;
+
+&lt;p&gt;Fantastic! You just need to run the configuration of an MFA for any local user using this command:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;google-authenticator -tdf --rate-limit=3 --rate-time=30 --window-size=17&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;And scan the QR code.&lt;/p&gt;
+
+&lt;p&gt;The resulting &lt;code class=&quot;highlighter-rouge&quot;&gt;~/.google_authenticator&lt;/code&gt; file can be managed using &lt;a href=&quot;https://docs.saltstack.com/en/latest/ref/states/all/salt.states.file.html&quot; target=&quot;_blank&quot;&gt;Salt&lt;/a&gt; but should be treated as sensitive information stored on disk.&lt;/p&gt;
+</description>
+                <link>https://invisiblerobots.org/2016/08/19/google-authenticator-with-saltstack/</link>
+                <guid>https://invisiblerobots.org/2016/08/19/google-authenticator-with-saltstack</guid>
+                <pubDate>Fri, 19 Aug 2016 11:55:54 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>OS X Yosemite and El Capitan Kerberos</title>
+                <description>&lt;p&gt;At one point in time, I used MIT Kerberos extensively throughout my workplace environment. LDAP was extended to use GSS-API and was extremely useful until this:&lt;/p&gt;
+
+&lt;pre&gt;$ kinit me@INVISIBLEROBOTS.ORG
+me@INVISIBLEROBOTS.ORG's Password:
+kinit: krb5_get_init_creds: Preauth required but no preauth options send by KDC
+$
+
+&lt;/pre&gt;
+
+&lt;p&gt;The above started happening after I upgraded to OS X Yosemite where Apple basically stopped supporting weak DES and RC4 encryption types on their Kerberos implementation shipped on 10.10 and future OS versions; &lt;a href=&quot;https://tools.ietf.org/id/draft-ietf-krb-wg-des-die-die-die-04.html&quot; target=&quot;_blank&quot;&gt;and rightfully so.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;I love this part…&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;By 2008, commercial hardware costing less than USD 15,000 could break DES keys in less than a day on average. DES is long past its sell-by date.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;You can probably do it these days for about &lt;a href=&quot;http://aws.amazon.com/ec2/pricing/&quot; target=&quot;_blank&quot;&gt;$2.60/hour&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;To get back the functionality on Yosemite without the necessary update on the KDC side (&lt;a href=&quot;http://web.mit.edu/kerberos/krb5-1.12/doc/admin/conf_files/kdc_conf.html#encryption-types&quot; target=&quot;_blank&quot;&gt;however recommended&lt;/a&gt;), follow these steps:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Install &lt;a href=&quot;http://brew.sh/&quot; target=&quot;_blank&quot;&gt;Homebrew&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;brew install Caskroom/cask/xquartz&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;brew install homebrew/dupes/heimdal&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;You should now have your ability to kinit back… for now…&lt;/p&gt;
+
+&lt;pre&gt;$ /usr/local/Cellar/heimdal/1.6rc2_1/bin/kinit me@INVISIBLEROBOTS.ORG
+me@INVISIBLEROBOTS.ORG's Password:
+$ klist
+Credentials cache: API:A5DE7730-A162-40ED-B44A-643C6B962C6F
+Principal: me@INVISIBLEROBOTS.ORG
+
+Issued Expires Principal
+Apr 7 21:01:05 2016 Apr 8 07:01:05 2016 krbtgt/INVISIBLEROBOTS.ORG@INVISIBLEROBOTS.ORG
+$
+&lt;/pre&gt;
+</description>
+                <link>https://invisiblerobots.org/2016/04/07/os-x-yosemite-and-el-capitan-kerberos/</link>
+                <guid>https://invisiblerobots.org/2016/04/07/os-x-yosemite-and-el-capitan-kerberos</guid>
+                <pubDate>Thu, 07 Apr 2016 18:05:17 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>Nested CloudFormation</title>
+                <description>&lt;p&gt;It’s been a while since the last post, partially because I’m lazy. But also, life has been busy. I switched the site to a new &lt;a href=&quot;https://github.com/robruma/ansible-wordpress&quot; target=&quot;_blank&quot;&gt;CMS&lt;/a&gt; and &lt;a href=&quot;https://theme.wordpress.com/themes/satellite/&quot; target=&quot;_blank&quot;&gt;theme&lt;/a&gt; and a new way to &lt;a href=&quot;http://www.google.com/adsense&quot; target=&quot;_blank&quot;&gt;pay the bills.&lt;/a&gt; I’ve realized there’s no way to sustain this site effectively without some way to pay for the AWS resources once the free tier year is over. So, click some ads so I can keep it running!&lt;/p&gt;
+
+&lt;p&gt;Anyway, one of the changes you may not have noticed is the use of &lt;a href=&quot;http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-stack.html&quot; target=&quot;_blank&quot;&gt;nested CloudFormation stacks&lt;/a&gt; to build the site’s necessary resources in AWS. Nested stacks are basically a way to &lt;em&gt;“resourceify”&lt;/em&gt; an entire stack so other stacks can use, or &lt;a href=&quot;https://en.wikipedia.org/wiki/Reusability&quot; target=&quot;_blank&quot;&gt;reuse&lt;/a&gt; the output attribute information as parameter values to other stacks. This allows you to “chain” stacks together that are &lt;a href=&quot;http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-dependson.html&quot; target=&quot;_blank&quot;&gt;dependent&lt;/a&gt; on one another so you can modularize the function of the stack. You can have a base-level resource stack that creates all the necessary security groups, the ELB and any Route 53 records which &lt;a href=&quot;http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html&quot; target=&quot;_blank&quot;&gt;outputs&lt;/a&gt; the resource names. The next stack, say a stack that creates an RDS, can use these outputs with a &lt;a href=&quot;http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html&quot; target=&quot;_blank&quot;&gt;&lt;code&gt;Fn::GetAtt&lt;/code&gt; function&lt;/a&gt; as parameter values. And so on…&lt;/p&gt;
+
+&lt;p&gt;“Can’t you just create one gigantic stack so you don’t need to go though all this horseshit”, you ask?&lt;/p&gt;
+
+&lt;p&gt;I’m glad you asked! Yeah, you can write up one monolithic stack, within &lt;a href=&quot;http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html&quot; target=&quot;_blank&quot;&gt;limits&lt;/a&gt;, that creates all the resources you need and orders the dependencies correctly. However, what happens when you want to change or update a resource? e.g. Change a password or modify a security group or utilize a new feature of a resource. You can certainly parameterize the stack to make it easier, but issuing an &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;a href=&quot;http://docs.aws.amazon.com/cli/latest/reference/cloudformation/update-stack.html&quot; target=&quot;_blank&quot;&amp;gt;update-stack&amp;lt;/a&amp;gt;&lt;/code&gt; on a stack sometimes has unforeseen effects, like inadvertently recreating an RDS because you updated a property that required &lt;a href=&quot;http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks.html&quot; target=&quot;_blank&quot;&gt;replacement&lt;/a&gt;! Yes, this happens.&lt;/p&gt;
+
+&lt;p&gt;Updating a top-level stack to change a parameter in a nested stack only updates the stack where you made the change. For instance, I added a new IP to a security group that is applied to the EC2 instances. I updated the top-level stack which updated the base-level stack only, guaranteeing the RDS stack was unaltered. In a sense, this adheres to the &lt;a href=&quot;https://en.wikipedia.org/wiki/Principle_of_least_privilege&quot; target=&quot;_blank&quot;&gt;Principle of Least Privilege&lt;/a&gt; by only updating the necessary stacks. Ok, that’s a stretch, but you get my point.&lt;/p&gt;
+
+&lt;p&gt;Also, there is value in creating reusable stacks that can be shared among many sites. For instance, a parameterized RDS stack can be hosted in an S3 bucket and reused repeatedly in multiple top-level stacks.&lt;/p&gt;
+
+&lt;p&gt;Now imagine this hypothetical situation. Say you manage a large number of applications that all use a MySQL RDS. Then OMG, out of the blue, you read all about a new, nasty security vulnerability with the version of MySQL used on all the applications. Luckily, there is an updated version available but uh oh, it’s a major release. You rush to test the new version and verify all apps can be upgraded. Then you realize you set &lt;code class=&quot;highlighter-rouge&quot;&gt;AllowMajorVersionUpgrade&lt;/code&gt; to &lt;code class=&quot;highlighter-rouge&quot;&gt;false&lt;/code&gt; on all RDS instances built with the stack. Thankfully, you had the foresight to reuse this stack as a nested stack resource so updating this parameter is cake.&lt;/p&gt;
+
+&lt;p&gt;The alternative may have been updating each stack individually while cursing like a drunken sailor the entire time. No offense intended to any overindulging cloud engineers with a colorful vocabulary who happen to be working on a boat. It’s pure coincidence.&lt;/p&gt;
+
+&lt;p&gt;Examples:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Warning, these &lt;del datetime=&quot;2015-08-23T04:00:04+00:00&quot;&gt;may&lt;/del&gt; will not work as-is&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;top-level&amp;lt;/p&amp;gt;&lt;/p&gt;
+
+&lt;pre&gt;{
+  &quot;AWSTemplateFormatVersion&quot;: &quot;2010-09-09&quot;,
+  &quot;Description&quot;: &quot;CloudFormation top-level stack&quot;,
+  &quot;Parameters&quot;: {
+    &quot;SSLCertificateId&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The SSL certificate used on the ELB&quot;
+    },
+    &quot;HostedZoneName&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Name of the hosted zone in Route 53&quot;
+    },
+    &quot;KeyName&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Name of the SSH Key used to access the instances&quot;
+    },
+    &quot;EC2InstanceType&quot;: {
+      &quot;ConstraintDescription&quot;: &quot;Must use a valid instance type&quot;,
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Instance type to use for created Server EC2 instance&quot;
+    },
+    &quot;EC2InstanceName&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Instance name tag for the EC2 instance&quot;
+    },
+    &quot;AutoScalingDesiredCapacity&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Auto Scaling Group desired capacity&quot;
+    },
+    &quot;AutoScalingMinSize&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Auto Scaling Group minimum size&quot;
+    },
+    &quot;AutoScalingMaxSize&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Auto Scaling Group maximum size&quot;
+    },
+    &quot;InstanceAMI&quot;: {
+      &quot;ConstraintDescription&quot;: &quot;Must be a valid AMI&quot;,
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;AMI ID&quot;
+    },
+    &quot;RDSEngine&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS engine type&quot;
+    },
+    &quot;RDSEngineVersion&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS engine version&quot;
+    },
+    &quot;RDSDBName&quot;: {
+      &quot;AllowedPattern&quot;: &quot;[a-zA-Z][a-zA-Z0-9]*&quot;,
+      &quot;ConstraintDescription&quot;: &quot;Must begin with a letter and contain only alphanumeric characters&quot;,
+      &quot;Description&quot;: &quot;The RDS name&quot;,
+      &quot;MaxLength&quot;: &quot;64&quot;,
+      &quot;MinLength&quot;: &quot;1&quot;,
+      &quot;Type&quot;: &quot;String&quot;
+    },
+    &quot;RDSUsername&quot;: {
+      &quot;AllowedPattern&quot;: &quot;[a-zA-Z][a-zA-Z0-9]*&quot;,
+      &quot;ConstraintDescription&quot;: &quot;Must begin with a letter and contain only alphanumeric characters&quot;,
+      &quot;Description&quot;: &quot;The RDS admin account username&quot;,
+      &quot;MaxLength&quot;: &quot;16&quot;,
+      &quot;MinLength&quot;: &quot;1&quot;,
+      &quot;Type&quot;: &quot;String&quot;
+    },
+    &quot;RDSPassword&quot;: {
+      &quot;ConstraintDescription&quot;: &quot;Must contain only alphanumeric characters&quot;,
+      &quot;Description&quot;: &quot;The RDS admin account password&quot;,
+      &quot;MinLength&quot;: &quot;1&quot;,
+      &quot;AllowedPattern&quot;: &quot;[a-zA-Z0-9]*&quot;,
+      &quot;NoEcho&quot;: &quot;true&quot;,
+      &quot;MaxLength&quot;: &quot;40&quot;,
+      &quot;Type&quot;: &quot;String&quot;
+    },
+    &quot;RDSDBPrefix&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS table name prefix&quot;
+    },
+    &quot;RDSDBInstanceClass&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS instance class&quot;
+    },
+    &quot;RDSAllocatedStorage&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The size of the storage allocated to the RDS&quot;
+    },
+    &quot;RDSAllowMajorVersionUpgrade&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Whether to allow major version upgrades to the RDS&quot;,
+      &quot;AllowedValues&quot;: [
+        &quot;true&quot;,
+        &quot;false&quot;
+      ]
+    },
+    &quot;RDSAutoMinorVersionUpgrade&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Whether to allow automatic minor version upgrades to the RDS&quot;,
+      &quot;AllowedValues&quot;: [
+        &quot;true&quot;,
+        &quot;false&quot;
+      ]
+    },
+    &quot;RDSPort&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS port&quot;
+    },
+    &quot;BaseStackTemplateURL&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The Base Stack template URL&quot;
+    },
+    &quot;RDSStackTemplateURL&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS Stack template URL&quot;
+    },
+    &quot;EC2StackTemplateURL&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The EC2 Stack template URL&quot;
+    }
+  },
+  &quot;Resources&quot;: {
+    &quot;BaseStack&quot;: {
+      &quot;Type&quot;: &quot;AWS::CloudFormation::Stack&quot;,
+      &quot;Properties&quot;: {
+        &quot;TemplateURL&quot;: {
+          &quot;Ref&quot;: &quot;BaseStackTemplateURL&quot;
+        },
+        &quot;Parameters&quot;: {
+          &quot;HostedZoneName&quot;: {
+            &quot;Ref&quot;: &quot;HostedZoneName&quot;
+          },
+          &quot;SSLCertificateId&quot;: {
+            &quot;Ref&quot;: &quot;SSLCertificateId&quot;
+          }
+        }
+      }
+    },
+    &quot;RDSStack&quot;: {
+      &quot;Type&quot;: &quot;AWS::CloudFormation::Stack&quot;,
+      &quot;Properties&quot;: {
+        &quot;TemplateURL&quot;: {
+          &quot;Ref&quot;: &quot;RDSStackTemplateURL&quot;
+        },
+        &quot;Parameters&quot;: {
+          &quot;RDSAllocatedStorage&quot;: {
+            &quot;Ref&quot;: &quot;RDSAllocatedStorage&quot;
+          },
+          &quot;VPCSecurityGroup&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;BaseStack&quot;,
+              &quot;Outputs.RDSSGName&quot;
+            ]
+          },
+          &quot;RDSUsername&quot;: {
+            &quot;Ref&quot;: &quot;RDSUsername&quot;
+          },
+          &quot;RDSPassword&quot;: {
+            &quot;Ref&quot;: &quot;RDSPassword&quot;
+          },
+          &quot;RDSDBName&quot;: {
+            &quot;Ref&quot;: &quot;RDSDBName&quot;
+          },
+          &quot;RDSDBInstanceClass&quot;: {
+            &quot;Ref&quot;: &quot;RDSDBInstanceClass&quot;
+          },
+          &quot;RDSAllowMajorVersionUpgrade&quot;: {
+            &quot;Ref&quot;: &quot;RDSAllowMajorVersionUpgrade&quot;
+          },
+          &quot;RDSAutoMinorVersionUpgrade&quot;: {
+            &quot;Ref&quot;: &quot;RDSAutoMinorVersionUpgrade&quot;
+          }
+        }
+      },
+      &quot;DependsOn&quot;: &quot;BaseStack&quot;
+    },
+    &quot;EC2Stack&quot;: {
+      &quot;Type&quot;: &quot;AWS::CloudFormation::Stack&quot;,
+      &quot;Properties&quot;: {
+        &quot;TemplateURL&quot;: {
+          &quot;Ref&quot;: &quot;EC2StackTemplateURL&quot;
+        },
+        &quot;Parameters&quot;: {
+          &quot;WebInstanceProfile&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;BaseStack&quot;,
+              &quot;Outputs.WebInstanceProfileName&quot;
+            ]
+          },
+          &quot;RDSUsername&quot;: {
+            &quot;Ref&quot;: &quot;RDSUsername&quot;
+          },
+          &quot;RDSEndpointAddress&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;RDSStack&quot;,
+              &quot;Outputs.RDSEndpointAddress&quot;
+            ]
+          },
+          &quot;Environment&quot;: {
+            &quot;Ref&quot;: &quot;Environment&quot;
+          },
+          &quot;RDSPassword&quot;: {
+            &quot;Ref&quot;: &quot;RDSPassword&quot;
+          },
+          &quot;SSLCertificateId&quot;: {
+            &quot;Ref&quot;: &quot;SSLCertificateId&quot;
+          },
+          &quot;RDSDBName&quot;: {
+            &quot;Ref&quot;: &quot;RDSDBName&quot;
+          },
+          &quot;AutoScalingMaxSize&quot;: {
+            &quot;Ref&quot;: &quot;AutoScalingMaxSize&quot;
+          },
+          &quot;HostedZoneName&quot;: {
+            &quot;Ref&quot;: &quot;HostedZoneName&quot;
+          },
+          &quot;RDSEndpointPort&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;RDSStack&quot;,
+              &quot;Outputs.RDSEndpointPort&quot;
+            ]
+          },
+          &quot;KeyName&quot;: {
+            &quot;Ref&quot;: &quot;KeyName&quot;
+          },
+          &quot;InstanceAMI&quot;: {
+            &quot;Ref&quot;: &quot;InstanceAMI&quot;
+          },
+          &quot;AutoScalingMinSize&quot;: {
+            &quot;Ref&quot;: &quot;AutoScalingMinSize&quot;
+          },
+          &quot;WebELB&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;BaseStack&quot;,
+              &quot;Outputs.WebELBName&quot;
+            ]
+          },
+          &quot;S3Bucket&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;BaseStack&quot;,
+              &quot;Outputs.S3BucketName&quot;
+            ]
+          },
+          &quot;EC2InstanceName&quot;: {
+            &quot;Ref&quot;: &quot;EC2InstanceName&quot;
+          },
+          &quot;EC2InstanceType&quot;: {
+            &quot;Ref&quot;: &quot;EC2InstanceType&quot;
+          },
+          &quot;AutoScalingDesiredCapacity&quot;: {
+            &quot;Ref&quot;: &quot;AutoScalingDesiredCapacity&quot;
+          },
+          &quot;WebSG&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;BaseStack&quot;,
+              &quot;Outputs.WebSGName&quot;
+            ]
+          }
+        }
+      },
+      &quot;DependsOn&quot;: &quot;RDSStack&quot;
+    }
+  }
+}
+&lt;/pre&gt;
+
+&lt;p&gt;base&amp;lt;/p&amp;gt;&lt;/p&gt;
+
+&lt;pre&gt;{
+  &quot;AWSTemplateFormatVersion&quot;: &quot;2010-09-09&quot;,
+  &quot;Description&quot;: &quot;Base Resources stack&quot;,
+  &quot;Parameters&quot;: {
+    &quot;SSLCertificateId&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The SSL certificate used on the ELB&quot;
+    },
+    &quot;HostedZoneName&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Name of the hosted zone in Route 53&quot;
+    }
+  },
+  &quot;Resources&quot;: {
+    &quot;WebELBRecordSet&quot;: {
+      &quot;Type&quot;: &quot;AWS::Route53::RecordSet&quot;,
+      &quot;Properties&quot;: {
+        &quot;HostedZoneName&quot;: {
+          &quot;Fn::Join&quot;: [
+            &quot;&quot;,
+            [
+              {
+                &quot;Ref&quot;: &quot;HostedZoneName&quot;
+              },
+              &quot;.&quot;
+            ]
+          ]
+        },
+        &quot;Comment&quot;: &quot;ELB alias resource record set&quot;,
+        &quot;AliasTarget&quot;: {
+          &quot;HostedZoneId&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;WebELB&quot;,
+              &quot;CanonicalHostedZoneNameID&quot;
+            ]
+          },
+          &quot;DNSName&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;WebELB&quot;,
+              &quot;CanonicalHostedZoneName&quot;
+            ]
+          }
+        },
+        &quot;Type&quot;: &quot;A&quot;,
+        &quot;Name&quot;: {
+          &quot;Fn::Join&quot;: [
+            &quot;&quot;,
+            [
+              {
+                &quot;Ref&quot;: &quot;HostedZoneName&quot;
+              },
+              &quot;.&quot;
+            ]
+          ]
+        }
+      },
+      &quot;DependsOn&quot;: &quot;WebELB&quot;
+    },
+    &quot;WebSG&quot;: {
+      &quot;Type&quot;: &quot;AWS::EC2::SecurityGroup&quot;,
+      &quot;Properties&quot;: {
+        &quot;VpcId&quot;: {
+          &quot;Ref&quot;: &quot;VPCId&quot;
+        },
+        &quot;GroupDescription&quot;: &quot;Enable inbound access from the ELB&quot;,
+      }
+    },
+    &quot;WebSGIngress80&quot;: {
+      &quot;Type&quot;: &quot;AWS::EC2::SecurityGroupIngress&quot;,
+      &quot;Properties&quot;: {
+        &quot;ToPort&quot;: &quot;80&quot;,
+        &quot;IpProtocol&quot;: &quot;tcp&quot;,
+        &quot;SourceSecurityGroupId&quot;: {
+          &quot;Ref&quot;: &quot;ELBSG&quot;
+        },
+        &quot;GroupId&quot;: {
+          &quot;Ref&quot;: &quot;WebSG&quot;
+        },
+        &quot;FromPort&quot;: &quot;80&quot;
+      }
+    },
+    &quot;WebSGIngress443&quot;: {
+      &quot;Type&quot;: &quot;AWS::EC2::SecurityGroupIngress&quot;,
+      &quot;Properties&quot;: {
+        &quot;ToPort&quot;: &quot;443&quot;,
+        &quot;IpProtocol&quot;: &quot;tcp&quot;,
+        &quot;SourceSecurityGroupId&quot;: {
+          &quot;Ref&quot;: &quot;ELBSG&quot;
+        },
+        &quot;GroupId&quot;: {
+          &quot;Ref&quot;: &quot;WebSG&quot;
+        },
+        &quot;FromPort&quot;: &quot;443&quot;
+      }
+    },
+    &quot;ELBSG&quot;: {
+      &quot;Type&quot;: &quot;AWS::EC2::SecurityGroup&quot;,
+      &quot;Properties&quot;: {
+        &quot;SecurityGroupIngress&quot;: [
+          {
+            &quot;ToPort&quot;: &quot;80&quot;,
+            &quot;IpProtocol&quot;: &quot;tcp&quot;,
+            &quot;CidrIp&quot;: &quot;0.0.0.0/0&quot;,
+            &quot;FromPort&quot;: &quot;80&quot;
+          },
+          {
+            &quot;ToPort&quot;: &quot;443&quot;,
+            &quot;IpProtocol&quot;: &quot;tcp&quot;,
+            &quot;CidrIp&quot;: &quot;0.0.0.0/0&quot;,
+            &quot;FromPort&quot;: &quot;443&quot;
+          }
+        ],
+        &quot;VpcId&quot;: {
+          &quot;Ref&quot;: &quot;VPCId&quot;
+        },
+        &quot;GroupDescription&quot;: &quot;Enable inbound access to the ELB&quot;,
+      }
+    },
+    &quot;RDSSG&quot;: {
+      &quot;Type&quot;: &quot;AWS::EC2::SecurityGroup&quot;,
+      &quot;Properties&quot;: {
+        &quot;VpcId&quot;: {
+          &quot;Ref&quot;: &quot;VPCId&quot;
+        },
+        &quot;GroupDescription&quot;: &quot;Enable inbound access only from the web server security group&quot;,
+      }
+    },
+    &quot;RDSSGIngress&quot;: {
+      &quot;Type&quot;: &quot;AWS::EC2::SecurityGroupIngress&quot;,
+      &quot;Properties&quot;: {
+        &quot;ToPort&quot;: &quot;3306&quot;,
+        &quot;IpProtocol&quot;: &quot;tcp&quot;,
+        &quot;SourceSecurityGroupId&quot;: {
+          &quot;Ref&quot;: &quot;WebSG&quot;
+        },
+        &quot;GroupId&quot;: {
+          &quot;Ref&quot;: &quot;RDSSG&quot;
+        },
+        &quot;FromPort&quot;: &quot;3306&quot;
+      }
+    },
+    &quot;WebELB&quot;: {
+      &quot;Type&quot;: &quot;AWS::ElasticLoadBalancing::LoadBalancer&quot;,
+      &quot;Properties&quot;: {
+        &quot;HealthCheck&quot;: {
+          &quot;HealthyThreshold&quot;: &quot;2&quot;,
+          &quot;Interval&quot;: &quot;30&quot;,
+          &quot;Target&quot;: &quot;SSL:443&quot;,
+          &quot;Timeout&quot;: &quot;5&quot;,
+          &quot;UnhealthyThreshold&quot;: &quot;2&quot;
+        },
+        &quot;CrossZone&quot;: &quot;true&quot;,
+        &quot;AvailabilityZones&quot;: {
+          &quot;Fn::GetAZs&quot;: &quot;&quot;
+        },
+        &quot;SecurityGroups&quot;: [
+          {
+            &quot;Ref&quot;: &quot;ELBSG&quot;
+          }
+        ],
+        &quot;Listeners&quot;: [
+          {
+            &quot;InstancePort&quot;: &quot;80&quot;,
+            &quot;LoadBalancerPort&quot;: &quot;80&quot;,
+            &quot;Protocol&quot;: &quot;HTTP&quot;
+          },
+          {
+            &quot;InstancePort&quot;: &quot;443&quot;,
+            &quot;Protocol&quot;: &quot;HTTPS&quot;,
+            &quot;LoadBalancerPort&quot;: &quot;443&quot;,
+            &quot;SSLCertificateId&quot;: {
+              &quot;Ref&quot;: &quot;SSLCertificateId&quot;
+            },
+            &quot;InstanceProtocol&quot;: &quot;HTTPS&quot;
+          }
+        ]
+      }
+    },
+    &quot;WebELBWWWRecordSet&quot;: {
+      &quot;Type&quot;: &quot;AWS::Route53::RecordSet&quot;,
+      &quot;Properties&quot;: {
+        &quot;HostedZoneName&quot;: {
+          &quot;Fn::Join&quot;: [
+            &quot;&quot;,
+            [
+              {
+                &quot;Ref&quot;: &quot;HostedZoneName&quot;
+              },
+              &quot;.&quot;
+            ]
+          ]
+        },
+        &quot;Comment&quot;: &quot;ELB alias resource record set&quot;,
+        &quot;AliasTarget&quot;: {
+          &quot;HostedZoneId&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;WebELB&quot;,
+              &quot;CanonicalHostedZoneNameID&quot;
+            ]
+          },
+          &quot;DNSName&quot;: {
+            &quot;Fn::GetAtt&quot;: [
+              &quot;WebELB&quot;,
+              &quot;CanonicalHostedZoneName&quot;
+            ]
+          }
+        },
+        &quot;Type&quot;: &quot;A&quot;,
+        &quot;Name&quot;: {
+          &quot;Fn::Join&quot;: [
+            &quot;&quot;,
+            [
+              &quot;www&quot;,
+              &quot;.&quot;,
+              {
+                &quot;Ref&quot;: &quot;HostedZoneName&quot;
+              },
+              &quot;.&quot;
+            ]
+          ]
+        }
+      },
+      &quot;DependsOn&quot;: &quot;WebELB&quot;
+    }
+  },
+  &quot;Outputs&quot;: {
+    &quot;ELBSGName&quot;: {
+      &quot;Description&quot;: &quot;ELB Security Group name&quot;,
+      &quot;Value&quot;: {
+        &quot;Ref&quot;: &quot;ELBSG&quot;
+      }
+    },
+    &quot;WebSGName&quot;: {
+      &quot;Description&quot;: &quot;Web Server Security Group name&quot;,
+      &quot;Value&quot;: {
+        &quot;Ref&quot;: &quot;WebSG&quot;
+      }
+    },
+    &quot;RDSSGName&quot;: {
+      &quot;Description&quot;: &quot;RDS Security Group name&quot;,
+      &quot;Value&quot;: {
+        &quot;Ref&quot;: &quot;RDSSG&quot;
+      }
+    },
+    &quot;WebELBName&quot;: {
+      &quot;Description&quot;: &quot;Web Server ELB name&quot;,
+      &quot;Value&quot;: {
+        &quot;Ref&quot;: &quot;WebELB&quot;
+      }
+    },
+    &quot;S3BucketName&quot;: {
+      &quot;Description&quot;: &quot;S3 Bucket name&quot;,
+      &quot;Value&quot;: {
+        &quot;Ref&quot;: &quot;ApplicationName&quot;
+      }
+    }
+  }
+}
+&lt;/pre&gt;
+
+&lt;p&gt;rds&lt;/p&gt;
+
+&lt;pre&gt;{
+  &quot;AWSTemplateFormatVersion&quot;: &quot;2010-09-09&quot;,
+  &quot;Description&quot;: &quot;MySQL RDS stack&quot;,
+  &quot;Parameters&quot;: {
+    &quot;RDSEngine&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS engine type&quot;
+    },
+    &quot;RDSEngineVersion&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS engine version&quot;
+    },
+    &quot;RDSDBName&quot;: {
+      &quot;AllowedPattern&quot;: &quot;[a-zA-Z][a-zA-Z0-9]*&quot;,
+      &quot;Description&quot;: &quot;The RDS name&quot;,
+      &quot;ConstraintDescription&quot;: &quot;Must begin with a letter and contain only alphanumeric characters&quot;,
+      &quot;MinLength&quot;: &quot;1&quot;,
+      &quot;MaxLength&quot;: &quot;64&quot;,
+      &quot;Type&quot;: &quot;String&quot;
+    },
+    &quot;RDSUsername&quot;: {
+      &quot;AllowedPattern&quot;: &quot;[a-zA-Z][a-zA-Z0-9]*&quot;,
+      &quot;Description&quot;: &quot;The RDS admin account username&quot;,
+      &quot;ConstraintDescription&quot;: &quot;Must begin with a letter and contain only alphanumeric characters&quot;,
+      &quot;MinLength&quot;: &quot;1&quot;,
+      &quot;MaxLength&quot;: &quot;16&quot;,
+      &quot;Type&quot;: &quot;String&quot;
+    },
+    &quot;RDSPassword&quot;: {
+      &quot;AllowedPattern&quot;: &quot;[a-zA-Z0-9]*&quot;,
+      &quot;ConstraintDescription&quot;: &quot;Must contain only alphanumeric characters&quot;,
+      &quot;NoEcho&quot;: &quot;true&quot;,
+      &quot;Description&quot;: &quot;The RDS admin account password&quot;,
+      &quot;MaxLength&quot;: &quot;40&quot;,
+      &quot;MinLength&quot;: &quot;1&quot;,
+      &quot;Type&quot;: &quot;String&quot;
+    },
+    &quot;RDSDBPrefix&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS table name prefix&quot;
+    },
+    &quot;RDSDBInstanceClass&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS instance class&quot;
+    },
+    &quot;RDSAllocatedStorage&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The size of the storage allocated to the RDS&quot;
+    },
+    &quot;RDSAllowMajorVersionUpgrade&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Whether to allow major version upgrades to the RDS&quot;,
+      &quot;AllowedValues&quot;: [
+        &quot;true&quot;,
+        &quot;false&quot;
+      ]
+    },
+    &quot;RDSAutoMinorVersionUpgrade&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Whether to allow automatic minor version upgrades to the RDS&quot;,
+      &quot;AllowedValues&quot;: [
+        &quot;true&quot;,
+        &quot;false&quot;
+      ]
+    },
+    &quot;RDSPort&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS port&quot;
+    },
+    &quot;VPCSecurityGroup&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The VPC security group used in the RDS instance&quot;
+    }
+  },
+  &quot;Resources&quot;: {
+    &quot;RDSInstance&quot;: {
+      &quot;Type&quot;: &quot;AWS::RDS::DBInstance&quot;,
+      &quot;Properties&quot;: {
+        &quot;DBParameterGroupName&quot;: {
+          &quot;Ref&quot;: &quot;RDSDBParameterGroup&quot;
+        },
+        &quot;PubliclyAccessible&quot;: {
+          &quot;Ref&quot;: &quot;RDSPubliclyAccessible&quot;
+        },
+        &quot;MasterUsername&quot;: {
+          &quot;Ref&quot;: &quot;RDSUsername&quot;
+        },
+        &quot;VPCSecurityGroups&quot;: [
+          {
+            &quot;Ref&quot;: &quot;VPCSecurityGroup&quot;
+          }
+        ],
+        &quot;Engine&quot;: {
+          &quot;Ref&quot;: &quot;RDSEngine&quot;
+        },
+        &quot;AllowMajorVersionUpgrade&quot;: {
+          &quot;Ref&quot;: &quot;RDSAllowMajorVersionUpgrade&quot;
+        },
+        &quot;AutoMinorVersionUpgrade&quot;: {
+          &quot;Ref&quot;: &quot;RDSAutoMinorVersionUpgrade&quot;
+        },
+        &quot;PreferredBackupWindow&quot;: {
+          &quot;Ref&quot;: &quot;RDSPreferredBackupWindow&quot;
+        },
+        &quot;BackupRetentionPeriod&quot;: {
+          &quot;Ref&quot;: &quot;RDSBackupRetentionPeriod&quot;
+        },
+        &quot;DBName&quot;: {
+          &quot;Ref&quot;: &quot;AWS::NoValue&quot;
+        },
+        &quot;PreferredMaintenanceWindow&quot;: {
+          &quot;Ref&quot;: &quot;RDSPreferredMaintenanceWindow&quot;
+        },
+        &quot;EngineVersion&quot;: {
+          &quot;Ref&quot;: &quot;RDSEngineVersion&quot;
+        },
+        &quot;DBSubnetGroupName&quot;: {
+          &quot;Ref&quot;: &quot;RDSDBSubnetGroup&quot;
+        },
+        &quot;StorageType&quot;: {
+          &quot;Ref&quot;: &quot;RDSStorageType&quot;
+        },
+        &quot;MasterUserPassword&quot;: {
+          &quot;Ref&quot;: &quot;RDSPassword&quot;
+        },
+        &quot;DBInstanceClass&quot;: {
+          &quot;Ref&quot;: &quot;RDSDBInstanceClass&quot;
+        },
+        &quot;Port&quot;: {
+          &quot;Ref&quot;: &quot;RDSPort&quot;
+        },
+        &quot;DBInstanceIdentifier&quot;: {
+          &quot;Fn::Join&quot;: [
+            &quot;-&quot;,
+            [
+              {
+                &quot;Ref&quot;: &quot;RDSDBName&quot;
+              }
+            ]
+          ]
+        }
+      },
+      &quot;DeletionPolicy&quot;: &quot;Snapshot&quot;
+    }
+  },
+  &quot;Outputs&quot;: {
+    &quot;RDSInstanceName&quot;: {
+      &quot;Description&quot;: &quot;RDS database instance name&quot;,
+      &quot;Value&quot;: {
+        &quot;Ref&quot;: &quot;RDSInstance&quot;
+      }
+    },
+    &quot;RDSDBPrefix&quot;: {
+      &quot;Description&quot;: &quot;RDS database prefix&quot;,
+      &quot;Value&quot;: {
+        &quot;Ref&quot;: &quot;RDSDBPrefix&quot;
+      }
+    },
+    &quot;RDSEndpointAddress&quot;: {
+      &quot;Description&quot;: &quot;RDS database endpoint address&quot;,
+      &quot;Value&quot;: {
+        &quot;Fn::GetAtt&quot;: [
+          &quot;RDSInstance&quot;,
+          &quot;Endpoint.Address&quot;
+        ]
+      }
+    },
+    &quot;RDSEndpointPort&quot;: {
+      &quot;Description&quot;: &quot;RDS database endpoint port&quot;,
+      &quot;Value&quot;: {
+        &quot;Fn::GetAtt&quot;: [
+          &quot;RDSInstance&quot;,
+          &quot;Endpoint.Port&quot;
+        ]
+      }
+    }
+  }
+}
+&lt;/pre&gt;
+
+&lt;p&gt;ec2&lt;/p&gt;
+
+&lt;pre&gt;{
+  &quot;AWSTemplateFormatVersion&quot;: &quot;2010-09-09&quot;,
+  &quot;Description&quot;: &quot;EC2 stack&quot;,
+  &quot;Parameters&quot;: {
+    &quot;KeyName&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Name of the SSH Key used to access the instances&quot;
+    },
+    &quot;S3Bucket&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Name of the S3 Bucket&quot;
+    },
+    &quot;EC2InstanceType&quot;: {
+      &quot;ConstraintDescription&quot;: &quot;Must use a valid instance type&quot;,
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Instance type to use for the EC2 instance&quot;
+    },
+    &quot;EC2InstanceName&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Instance name tag for the EC2 instance&quot;
+    },
+    &quot;AutoScalingDesiredCapacity&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Auto Scaling Group desired capacity&quot;
+    },
+    &quot;AutoScalingMinSize&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Auto Scaling Group minimum size&quot;
+    },
+    &quot;AutoScalingMaxSize&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Auto Scaling Group maximum size&quot;
+    },
+    &quot;SSLCertificateId&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The SSL certificate used on the ELB&quot;
+    },
+    &quot;InstanceAMI&quot;: {
+      &quot;ConstraintDescription&quot;: &quot;Must be a valid AMI&quot;,
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;AMI ID&quot;
+    },
+    &quot;HostedZoneName&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;Name of the hosted zone in Route 53&quot;
+    },
+    &quot;RDSEndpointAddress&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS endpoint&quot;
+    },
+    &quot;RDSEndpointPort&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS endpoint port&quot;
+    },
+    &quot;RDSDBName&quot;: {
+      &quot;AllowedPattern&quot;: &quot;[a-zA-Z][a-zA-Z0-9]*&quot;,
+      &quot;Description&quot;: &quot;The RDS name&quot;,
+      &quot;ConstraintDescription&quot;: &quot;Must begin with a letter and contain only alphanumeric characters&quot;,
+      &quot;MinLength&quot;: &quot;1&quot;,
+      &quot;MaxLength&quot;: &quot;64&quot;,
+      &quot;Type&quot;: &quot;String&quot;
+    },
+    &quot;RDSUsername&quot;: {
+      &quot;AllowedPattern&quot;: &quot;[a-zA-Z][a-zA-Z0-9]*&quot;,
+      &quot;Description&quot;: &quot;The RDS admin account username&quot;,
+      &quot;ConstraintDescription&quot;: &quot;Must begin with a letter and contain only alphanumeric characters&quot;,
+      &quot;MinLength&quot;: &quot;1&quot;,
+      &quot;MaxLength&quot;: &quot;16&quot;,
+      &quot;Type&quot;: &quot;String&quot;
+    },
+    &quot;RDSPassword&quot;: {
+      &quot;AllowedPattern&quot;: &quot;[a-zA-Z0-9]*&quot;,
+      &quot;ConstraintDescription&quot;: &quot;Must contain only alphanumeric characters&quot;,
+      &quot;NoEcho&quot;: &quot;true&quot;,
+      &quot;Description&quot;: &quot;The RDS admin account password&quot;,
+      &quot;MaxLength&quot;: &quot;40&quot;,
+      &quot;MinLength&quot;: &quot;1&quot;,
+      &quot;Type&quot;: &quot;String&quot;
+    },
+    &quot;RDSDBPrefix&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The RDS table name prefix&quot;
+    },
+    &quot;WebSG&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The web server security group&quot;
+    },
+    &quot;WebELB&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The web server ELB name&quot;
+    },
+    &quot;WebInstanceProfile&quot;: {
+      &quot;Type&quot;: &quot;String&quot;,
+      &quot;Description&quot;: &quot;The web server IAM Profile name&quot;
+    }
+  },
+  &quot;Resources&quot;: {
+    &quot;WebLaunchConfiguration&quot;: {
+      &quot;Type&quot;: &quot;AWS::AutoScaling::LaunchConfiguration&quot;,
+      &quot;Properties&quot;: {
+        &quot;UserData&quot;: {
+          &quot;Fn::Base64&quot;: {
+            &quot;Fn::Join&quot;: [
+              &quot;&quot;,
+              [
+                &quot;#!/bin/bash\n&quot;,
+                {
+                  &quot;Fn::Join&quot;: [
+                    &quot;&quot;,
+                    [
+                      &quot;export AWS_DEFAULT_REGION=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;AWS::Region&quot;
+                      },
+                      &quot;\n&quot;
+                    ]
+                  ]
+                },
+                {
+                  &quot;Fn::Join&quot;: [
+                    &quot;&quot;,
+                    [
+                      &quot;/opt/aws/bin/cfn-init -s &quot;,
+                      {
+                        &quot;Ref&quot;: &quot;AWS::StackId&quot;
+                      },
+                      &quot; -r WebLaunchConfiguration --region &quot;,
+                      {
+                        &quot;Ref&quot;: &quot;AWS::Region&quot;
+                      },
+                      &quot;\n&quot;
+                    ]
+                  ]
+                },
+                &quot;. /etc/cloud-env.sh\n#yum install a bunch of stuff and use cloud-env.sh variables“
+              ]
+            ]
+          }
+        },
+        &quot;ImageId&quot;: {
+          &quot;Ref&quot;: &quot;InstanceAMI&quot;
+        },
+        &quot;KeyName&quot;: {
+          &quot;Ref&quot;: &quot;KeyName&quot;
+        },
+        &quot;SecurityGroups&quot;: [
+          {
+            &quot;Ref&quot;: &quot;WebSG&quot;
+          },
+        ],
+        &quot;IamInstanceProfile&quot;: {
+          &quot;Ref&quot;: &quot;WebInstanceProfile&quot;
+        },
+        &quot;InstanceType&quot;: {
+          &quot;Ref&quot;: &quot;EC2InstanceType&quot;
+        }
+      },
+      &quot;Metadata&quot;: {
+        &quot;AWS::CloudFormation::Init&quot;: {
+          &quot;config&quot;: {
+            &quot;files&quot;: {
+              &quot;/etc/cloud-env.sh&quot;: {
+                &quot;content&quot;: {
+                  &quot;Fn::Join&quot;: [
+                    &quot;&quot;,
+                    [
+                      &quot;export AWSDefaultRegion=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;AWS::Region&quot;
+                      },
+                      &quot;\n&quot;,
+                      &quot;export S3Bucket=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;S3Bucket&quot;
+                      },
+                      &quot;\n&quot;,
+                      &quot;export HostedZoneName=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;HostedZoneName&quot;
+                      },
+                      &quot;\n&quot;,
+                      &quot;export DBName=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;RDSDBName&quot;
+                      },
+                      &quot;\n&quot;,
+                      &quot;export DBUsername=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;RDSUsername&quot;
+                      },
+                      &quot;\n&quot;,
+                      &quot;export DBPassword=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;RDSPassword&quot;
+                      },
+                      &quot;\n&quot;,
+                      &quot;export DBEndpoint=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;RDSEndpointAddress&quot;
+                      },
+                      &quot;\n&quot;,
+                      &quot;export DBPort=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;RDSEndpointPort&quot;
+                      },
+                      &quot;\n&quot;,
+                      &quot;export DBPrefix=&quot;,
+                      {
+                        &quot;Ref&quot;: &quot;RDSDBPrefix&quot;
+                      },
+                      &quot;\n&quot;,
+                      &quot;export INSTANCE_ID=$(/opt/aws/bin/ec2-metadata -i | cut -d ' ' -f 2)\n&quot;
+                    ]
+                  ]
+                },
+                &quot;owner&quot;: &quot;root&quot;,
+                &quot;group&quot;: &quot;root&quot;,
+                &quot;mode&quot;: &quot;000400&quot;
+              }
+            }
+          }
+        }
+      }
+    },
+    &quot;WebAutoScalingGroup&quot;: {
+      &quot;Type&quot;: &quot;AWS::AutoScaling::AutoScalingGroup&quot;,
+      &quot;Properties&quot;: {
+        &quot;DesiredCapacity&quot;: {
+          &quot;Ref&quot;: &quot;AutoScalingDesiredCapacity&quot;
+        },
+        &quot;Tags&quot;: [
+          {
+            &quot;PropagateAtLaunch&quot;: &quot;true&quot;,
+            &quot;Value&quot;: {
+              &quot;Fn::Join&quot;: [
+                &quot;-&quot;,
+                [
+                  {
+                    &quot;Ref&quot;: &quot;EC2InstanceName&quot;
+                  }
+                ]
+              ]
+            },
+            &quot;Key&quot;: &quot;Name&quot;
+          }
+        ],
+        &quot;LaunchConfigurationName&quot;: {
+          &quot;Ref&quot;: &quot;WebLaunchConfiguration&quot;
+        },
+        &quot;MinSize&quot;: {
+          &quot;Ref&quot;: &quot;AutoScalingMinSize&quot;
+        },
+        &quot;MaxSize&quot;: {
+          &quot;Ref&quot;: &quot;AutoScalingMaxSize&quot;
+        },
+        &quot;LoadBalancerNames&quot;: [
+          {
+            &quot;Ref&quot;: &quot;WebELB&quot;
+          }
+        ],
+        &quot;AvailabilityZones&quot;: {
+          &quot;Fn::GetAZs&quot;: &quot;&quot;
+        }
+      },
+      &quot;DependsOn&quot;: &quot;WebLaunchConfiguration&quot;
+    }
+  }
+}
+&lt;/pre&gt;
+</description>
+                <link>https://invisiblerobots.org/2015/08/23/nested-cloudformation/</link>
+                <guid>https://invisiblerobots.org/2015/08/23/nested-cloudformation</guid>
+                <pubDate>Sat, 22 Aug 2015 20:14:00 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>X11… Really?</title>
+                <description>&lt;p&gt;Yeah, not exactly an exciting technology that’s making innovative progress in the cloud space. However, I needed to write an article to add to the many solutions posted to the interwebs-at-large regarding the inability to forward X11.&lt;/p&gt;
+
+&lt;p&gt;Why, you ask?&lt;/p&gt;
+
+&lt;p&gt;There are innumerable amounts of blog posts that detail the many, many error messages possible while trying to open an X11 based application over an ssh connection to a host with a misconfigured X11 client or server, but not many with the seemingly unrelated solution I put in place.&lt;/p&gt;
+
+&lt;p&gt;Here’s the problem, I just updated my Air to Mac OSX Yosemite and at about the same time, I rebuilt a test box I used as a DNS server so I had a few variables change at once. When I tried to connect to the box and run various X11 based applications over ssh, I got this:&lt;/p&gt;
+
+&lt;pre&gt;$ ssh -Y me@10.0.0.10
+me@10.0.0.10's password: 
+X11 forwarding request failed on channel 0
+Last login: Sat Jun 27 17:49:16 2015 from 10.0.0.34
+[me@my-new-centos-host ~]$ virt-manager 
+[me@my-new-centos-host ~]$ 
+** (virt-manager:16130): WARNING **: Could not open X display
+Gtk couldn't be initialized
+
+[me@my-new-centos-host ~]$ 
+[me@my-new-centos-host ~]$ xterm 
+xterm: Xt error: Can't open display: 
+xterm: DISPLAY is not set
+[me@my-new-centos-host ~]$&lt;/pre&gt;
+
+&lt;p&gt;Typical, right?&lt;/p&gt;
+
+&lt;p&gt;I thought so too… I then immediately blamed my Air and ran the gamut of Google searches with keywords like “x11 macos yosemite” and “xquartz yosemite” and found a few complaints about XQuartz 2.7.7 falling apart after an upgrade to Yosemite, solution being an upgrade to 2.7.8_rc1.&lt;/p&gt;
+
+&lt;p&gt;Nope… didn’t work.&lt;/p&gt;
+
+&lt;p&gt;Even some fancy stuff like:&lt;/p&gt;
+
+&lt;p&gt;Recreate ~/.Xauthority with a trusted key&lt;/p&gt;
+
+&lt;pre&gt;xauth generate $DISPLAY . trusted&lt;/pre&gt;
+
+&lt;p&gt;No&lt;/p&gt;
+
+&lt;p&gt;Fix the DISPLAY environment variable by adding this to ~/.bashrc&lt;/p&gt;
+
+&lt;p&gt; &lt;/p&gt;
+
+&lt;pre&gt;alias ssh=&quot;ln -fs $(echo $DISPLAY | sed 's:\(/private/tmp/com\.apple\.launchd\.[^/]*\)/.*:\1:') $(echo $DISPLAY | sed 's:/private/tmp/com\.apple\.launchd\.\([^/]*\)/.*:/private/tmp/launch-\1:'); ssh&quot;&lt;/pre&gt;
+
+&lt;p&gt;No&lt;/p&gt;
+
+&lt;p&gt;Ugh… After determining that the client side was then fine by trying a different box and running xterm (Yeah I know, I should have done this first :/) I focused on the new box as the problem. Again, Google, &lt;code class=&quot;highlighter-rouge&quot;&gt;centos Can't open display&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;centos Gtk couldn't be initialized&lt;/code&gt;. Nothing out of the ordinary that wasn’t already setup.&lt;/p&gt;
+
+&lt;p&gt;Ensure xauth is installed&lt;/p&gt;
+
+&lt;p&gt;xhost + on the host and client&lt;/p&gt;
+
+&lt;pre&gt;X11Forwarding yes&lt;/pre&gt;
+
+&lt;p&gt;and&lt;/p&gt;
+
+&lt;pre&gt;X11UseLocalhost no&lt;/pre&gt;
+
+&lt;p&gt;in sshd_config&lt;/p&gt;
+
+&lt;p&gt;Bah…&lt;/p&gt;
+
+&lt;p&gt;So, I stepped back because it was getting annoying. I then decided to look for some error messages (Yeah I know, I also should have done this first :/). Hmmm, then I found this:&lt;/p&gt;
+
+&lt;pre&gt;sshd[8763]: error: Can't get IP address for X11 DISPLAY&lt;/pre&gt;
+
+&lt;p&gt;WTH, can’t get IP address… What?&lt;/p&gt;
+
+&lt;p&gt;The IP is in the environment variables sent along with the ssh connection…&lt;/p&gt;
+
+&lt;p&gt;Why can’t it “get” the IP address for the… Wait… The remote IP or the local IP?&lt;/p&gt;
+
+&lt;p&gt;Hmm… What about DNS, Oh yeah, no DNS any more…&lt;/p&gt;
+
+&lt;p&gt;What about the hosts file?:&lt;/p&gt;
+
+&lt;pre&gt;[me@my-new-centos-host ~]$ cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6&lt;/pre&gt;
+
+&lt;p&gt;facepalm…&lt;/p&gt;
+
+&lt;p&gt;I added an entry to /etc/hosts and I could once again forward X11 normally:&lt;/p&gt;
+
+&lt;pre&gt;my-new-centos-host 10.0.0.10&lt;/pre&gt;
+
+&lt;p&gt;I guess adding a DNS entry would have worked too :/&lt;/p&gt;
+</description>
+                <link>https://invisiblerobots.org/2015/07/10/x11-really/</link>
+                <guid>https://invisiblerobots.org/2015/07/10/x11-really</guid>
+                <pubDate>Fri, 10 Jul 2015 19:43:11 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>PowerShell Shenanigans</title>
+                <description>&lt;p&gt;Yeah, that’s right, I said &lt;a href=&quot;http://en.wikipedia.org/wiki/Windows_PowerShell&quot;&gt;PowerShell!&lt;/a&gt; The Schizophrenic scripting “language” that reminded me of Java, Perl, Bash, VB script and Windows command line all smashed together.&lt;/p&gt;
+
+&lt;p&gt;I’ve never coded any PowerShell before, but when my team needed some automation done on a Windows application running in ec2, I was willing to give it a shot. I was taking on the challenge of writing a script to run from a Windows scheduled task that read an entry from an Oracle RDS and executed a batch file depending on the data the table contained.&lt;/p&gt;
+
+&lt;p&gt;Not having any experience with PowerShell, I resorted to Google for some research. In about a day, I had a working script that did everything I needed it to do without the over-complication I was initially expecting. PowerShell has what seems like dozens of cmdlets for each version iteration but once I was able to figure out the fundamentals, it was nearly the same as writing a Bash script.&lt;/p&gt;
+
+&lt;p&gt;I’m a fan of using the right tool for the job and while PowerShell isn’t my first choice for automation, it made a lot of sense in this situation. If I were to write the same script in Python, it would have added an unnecessary layer of complexity to the instance build automation.&lt;/p&gt;
+
+&lt;p&gt;Here’s a few cool things I learned during this adventure:&lt;/p&gt;
+
+&lt;p&gt;Create a securestring:&lt;/p&gt;
+
+&lt;pre&gt;$securestring = Read-Host &quot;Password: &quot; -AsSecureString
+$key = foreach ($i in 1..32) { Get-Random -Minimum 0 -Maximum 255 }
+Set-Content .\key.txt $key
+$securestring | ConvertFrom-SecureString -Key $key | Set-Content .\securestring.txt&lt;/pre&gt;
+
+&lt;p&gt;Decrypt that securestring:&lt;/p&gt;
+
+&lt;pre&gt;$key = (Get-Content .\key.txt)
+$securestring = (Get-Content .\securestring.txt)
+$plaintext = $securestring | ConvertTo-SecureString -Key $key | ForEach-Object {[Runtime.InteropServices.Marshal]::PtrToStringAuto(\[Runtime.InteropServices.Marshal]::SecureStringToBSTR($_))}
+Write-Output $plaintext&lt;/pre&gt;
+
+&lt;p&gt;Connect to an Oracle instance:&lt;/p&gt;
+
+&lt;pre&gt;# Load Oracle Provider
+[Reflection.Assembly]::LoadWithPartialName(&quot;System.Data.OracleClient&quot;)
+
+# SQL commands
+$select_cmd = &quot;select ${column} from ${table} where NAME_OF_COLUMN='${name_of_column}' and NAME_OF_OTHER_COLUMN='${name_of_other_column}'&quot;
+$update_cmd = &quot;update ${table} set ${column}='${column_value}' where NAME_OF_COLUMN='${name_of_column}' and NAME_OF_OTHER_COLUMN='${name_of_other_column}'&quot;
+
+# Create connection
+$connection = New-Object DATA.OracleClient.OracleConnection(&quot;Data Source=${datasource};User Id=${userid};Password=${plaintext}&quot;)
+$connection.Open()
+$value = [System.String]
+$value = (new-Object DATA.OracleClient.OracleCommand($select\_cmd,$connection)).ExecuteScalar()
+$connection.Close()&lt;/pre&gt;
+</description>
+                <link>https://invisiblerobots.org/2015/06/10/powershell-shenanigans/</link>
+                <guid>https://invisiblerobots.org/2015/06/10/powershell-shenanigans</guid>
+                <pubDate>Wed, 10 Jun 2015 19:36:29 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>Junk Mail Street Cred</title>
+                <description>&lt;p&gt;This complication began when I wanted to setup a Postfix mail system for this site and I figured I didn’t want to manage any users or mailboxes. I had this idea to only setup an inbound Postfix relay with local-only access. However, I only intended to use aliases pointing to external addresses with actual mailboxes to keep from storing mail on the instances. It was no surprise that I ran into a problem where some mail was getting dropped.&lt;/p&gt;
+
+&lt;p&gt;It’s about a 50/50 shot at sending email from an ec2 instance and having it arrive at the intended destination. I’m pretty sure most mail systems will spam tag an ec2 based message relay unless it originates from the instance. I believe one of the reasons ec2 relayed messages are tagged as spam stems from the remote mail systems client restrictions performing a reverse DNS check on the origin. An AWS instance will always have functional forward and reverse DNS but with a relay through an AWS resource (instance or ELB), the reverse DNS will always be authoritative to Amazon and therefore never resolve to a delegated domain in Route 53. I think there are some hoops you can jump through with Amazon to lift some of the restrictions by using an EIP &lt;a href=&quot;https://forums.aws.amazon.com/thread.jspa?messageID=351288&quot;&gt;yada yada yada…&lt;/a&gt; This all seemed like an interesting exercise but I was not thrilled at the notion of using an EIP on a dedicated instance strictly for relaying mail.&lt;/p&gt;
+
+&lt;p&gt;What I ended up configuring was a seemingly solid email system comprised of Postfix, Postgrey and Amazon SES that I can terminate and rebuild whenever I like. I say “seemingly” because it has not been battle tested for very long so far but it has potential to be pretty bulletproof. And, by using CloudFormation and Auto Scaling groups, all these instances essentially become &lt;a href=&quot;http://cloudscaling.com/blog/cloud-computing/pets-vs-cattle-the-elastic-cloud-story/&quot;&gt;ephemeral&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Amazon SES can be used as, basically, a &lt;a href=&quot;http://en.wikipedia.org/wiki/Smart_host&quot;&gt;smart host&lt;/a&gt; when email is either being relayed or generated from an ec2 instance. Although, you need to verify each email address and/or domain you intend to be delivering to. Here is a straightforward how-to for Postfix:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://docs.aws.amazon.com/ses/latest/DeveloperGuide/postfix.html&quot; target=&quot;_blank&quot;&gt;https://docs.aws.amazon.com/ses/latest/DeveloperGuide/postfix.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;SES can also set up the necessary DNS entries for SPF and DKIM automatically in Route 53 for the domain in question. If the domain isn’t delegated to Route 53, SES will allow you to download the proper syntax for the records to be created wherever you’re hosting DNS.&lt;/p&gt;
+
+&lt;p&gt;I also didn’t want to be a bad interweb citizen and a potential spam target so I added a few restrictions and greylisting:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://wiki.centos.org/HowTos/postfix_restrictions&quot;&gt;http://wiki.centos.org/HowTos/postfix_restrictions&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://wiki.centos.org/HowTos/postgrey&quot;&gt;http://wiki.centos.org/HowTos/postgrey&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;For the lazy and the Googlers, here’s part of the UserData I used to configure the mail hosts:&lt;/p&gt;
+
+&lt;pre&gt;yum -y install postfix postfix-perl-scripts postgrey mailx
+yum -y remove sendmail
+
+perl -pi -e 's/^inet_interfaces = localhost$/#inet_interfaces = localhost/g' /etc/postfix/main.cf
+perl -pi -e 's/^#inet_interfaces = all$/inet_interfaces = all/g' /etc/postfix/main.cf
+perl -pi -e 's/^#myhostname = virtual.domain.tld$/myhostname = invisiblerobots.org/g' /etc/postfix/main.cf
+perl -pi -e 's/^#mydomain = domain.tld$/mydomain = invisiblerobots.org/g' /etc/postfix/main.cf
+perl -pi -e 's/^#myorigin = \$mydomain$/myorigin = \$mydomain/g' /etc/postfix/main.cf
+perl -pi -e 's/^mydestination = \$myhostname,\slocalhost.\$mydomain,\slocalhost$/mydestination = \$myhostname, localhost.\$mydomain, localhost, \$mydomain/g' /etc/postfix/main.cf
+perl -pi -e 's/^#mynetworks\_style = host$/mynetworks\_style = host/g' /etc/postfix/main.cf
+perl -pi -e 's/^\s+-o smtp_fallback_relay=$/#       -o smtp_fallback_relay=/g' /etc/postfix/master.cf
+
+ # Add aliases here
+cat &amp;lt;&amp;lt; EOF &amp;gt;&amp;gt; /etc/aliases
+someone:        someone@example.org
+EOF
+newaliases
+
+cat &amp;lt;&amp;lt; EOF &amp;gt;&amp;gt; /etc/postfix/main.cf
+
+ # SES relayhost
+relayhost = [${SESEndpoint}]:25
+
+ # Inbound/outbound TLS config
+smtpd_use_tls = yes
+smtpd_tls_cert_file = /etc/pki/tls/certs/localhost.crt
+smtpd_tls_key_file = $smtpd_tls_cert_file
+smtp_tls_CAfile = /etc/ssl/certs/ca-bundle.crt
+smtpd_tls_received_header = yes
+smtpd_tls_session_cache_timeout = 3600s
+smtp_sasl_auth_enable = yes
+smtp_sasl_security_options = noanonymous
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_use_tls = yes
+smtp_tls_security_level = encrypt
+smtp_tls_note_starttls_offer = yes
+tls_random_source = dev:/dev/urandom
+
+ # SMTP HELO restrictions
+smtpd_delay_reject = yes
+smtpd_helo_required = yes
+smtpd_helo_restrictions =
+    permit_mynetworks,
+    reject_non_fqdn_helo_hostname,
+    reject_invalid_helo_hostname,
+    permit
+
+ # SMTP sender restrictions
+smtpd_sender_restrictions =
+    permit_mynetworks,
+    reject_non_fqdn_sender,
+    reject_unknown_sender_domain,
+    permit
+
+ # SMTP client restrictions
+smtpd_recipient_restrictions =
+   reject_unauth_pipelining,
+   reject_non_fqdn_recipient,
+   reject_unknown_recipient_domain,
+   permit_mynetworks,
+   reject_unauth_destination,
+   check_sender_access
+         hash:/etc/postfix/sender_access,
+   reject_rbl_client zen.spamhaus.org,
+   reject_rbl_client bl.spamcop.net,
+   check_policy_service unix:postgrey/socket,
+   permit
+EOF
+
+cat &amp;lt;&amp;lt; EOF &amp;gt; /etc/postfix/sasl_passwd
+[${SESEndpoint}]:25 ${SESUser}:${SESPassword}
+EOF
+postmap hash:/etc/postfix/sasl_passwd
+chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+
+cat &amp;lt;&amp;lt; EOF &amp;gt; /etc/postfix/sender_access
+ #
+ # Black/Whitelist for senders matching the 'MAIL FROM' field. Examples...
+ #
+ #myfriend@example.com    OK
+ #junk@spam.com           REJECT
+ #marketing@              REJECT
+ #theboss@                OK
+ #deals.marketing.com     REJECT
+ #somedomain.com          OK
+EOF
+postmap hash:/etc/postfix/sender_access
+chown root:root /etc/postfix/sender_access /etc/postfix/sender_access.db
+chmod 0600 /etc/postfix/sender_access /etc/postfix/sender_access.db
+
+cat &amp;lt;&amp;lt; EOF &amp;gt; /etc/sysconfig/postgrey
+OPTIONS=&quot;--unix=/var/spool/postfix/postgrey/socket --delay=60&quot;
+EOF
+
+service postgrey start
+chkconfig postgrey on
+service postfix start
+chkconfig postfix on&lt;/pre&gt;
+
+&lt;p&gt;Update:&lt;/p&gt;
+
+&lt;p&gt;As of 9/28/15, AWS &lt;a href=&quot;https://aws.amazon.com/blogs/aws/new-receive-and-process-incoming-email-with-amazon-ses/&quot;&gt;released&lt;/a&gt; a new feature of SES that allows receiving inbound email which makes this process outdated to a certain extent. It can still be used to send email that originates from an instance to ensure it is free of spam.&lt;/p&gt;
+
+&lt;p&gt;Although, you should probably ensure you are not listening for inbound SMTP connections anymore.&lt;/p&gt;
+
+&lt;p&gt;Remove the following lines from the above example:&lt;/p&gt;
+
+&lt;pre&gt;perl -pi -e 's/^inet_interfaces = localhost$/#inet_interfaces = localhost/g' /etc/postfix/main.cf
+perl -pi -e 's/^#inet_interfaces = all$/inet_interfaces = all/g' /etc/postfix/main.cf
+&lt;/pre&gt;
+</description>
+                <link>https://invisiblerobots.org/2015/06/05/junk-mail-street-cred/</link>
+                <guid>https://invisiblerobots.org/2015/06/05/junk-mail-street-cred</guid>
+                <pubDate>Fri, 05 Jun 2015 19:26:29 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>cfn-pyplates and cfn-init magic</title>
+                <description>&lt;p&gt;For some, this information may be old hat, but for a while I’ve been looking for a good way to run cfn-init within UserData during an instance launch. I had a catch 22 scenario happening when building UserData with references to AWS::StackId because I’m using cfn-pyplates to build the CloudFormation json. Until recently, I couldn’t find a good way to use resource references while base64 encoding a build script in LaunchConfiguration…&lt;/p&gt;
+
+&lt;p&gt;The solution turned out to be a combination of &lt;code class=&quot;highlighter-rouge&quot;&gt;str&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;join&lt;/code&gt; to build the head of the script while reading in the remainder with an &lt;code class=&quot;highlighter-rouge&quot;&gt;open&lt;/code&gt; call:&lt;/p&gt;
+
+&lt;pre&gt;interpreter = str('#!/bin/bash\n')
+default_region = join('', str('export AWS_DEFAULT_REGION='), ref('AWS::Region'), str('\n'))
+cfn_init_cmd = join('', str('/opt/aws/bin/cfn-init -s '), ref('AWS::StackId'), str(' -r WebLaunchConfiguration --region '), ref('AWS::Region'), str('\n'))
+build_script = open('./web_build.sh').read()
+user_data_script = join('', interpreter, default_region, cfn_init_cmd, build_script)&lt;/pre&gt;
+
+&lt;p&gt;and in my LaunchConfiguration resource:&lt;/p&gt;
+
+&lt;pre&gt;cft.resources.add(
+  Resource('WebLaunchConfiguration', 'AWS::AutoScaling::LaunchConfiguration',
+    {
+      'ImageId': ref('InstanceAMI'),
+      'InstanceType': ref('EC2InstanceType'),
+      'UserData': base64(user_data_script),
+      'SecurityGroups': [ref('WebSG'), ref('AdminSG')],
+      'KeyName': 'default',
+      'IamInstanceProfile': 'WebInstanceRole',
+    },
+    Metadata(
+      {
+        'AWS::CloudFormation::Init':
+          {
+            'config': {
+              'files': {
+                '/etc/cloud-env.sh': {
+                  'content': join('',
+                    &quot;export DBName=&quot;, ref('DBName'), &quot;\n&quot;,
+                    &quot;export DBUsername=&quot;, ref('DBUsername'), &quot;\n&quot;,
+                    &quot;export DBPassword=&quot;, ref('DBPassword'), &quot;\n&quot;,
+                    &quot;export DBAddress=&quot;, get_att('RDSInstance', 'Endpoint.Address'), &quot;\n&quot;,
+                    &quot;export DBPort=&quot;, get_att('RDSInstance', 'Endpoint.Port'), &quot;\n&quot;,
+                    &quot;export DBPrefix=&quot;, ref('DBPrefix'), &quot;\n&quot;,
+                ),
+                'mode': '000400',
+                'owner': 'root',
+                'group': 'root'
+              },
+            }
+          }
+        }
+      }
+    )
+  )
+)&lt;/pre&gt;
+
+&lt;p&gt;Boom! Now I could source &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/cloud-env.sh&lt;/code&gt; in UserData and have a secure way to pass all my parameters to the instances…&lt;/p&gt;
+</description>
+                <link>https://invisiblerobots.org/2015/05/25/cfn-pyplates-and-cfn-init-magic/</link>
+                <guid>https://invisiblerobots.org/2015/05/25/cfn-pyplates-and-cfn-init-magic</guid>
+                <pubDate>Sun, 24 May 2015 22:56:59 -0400</pubDate>
+        </item>
+
+        <item>
+                <title>The blog&amp;#8217;s up!</title>
+                <description>&lt;div class=&quot;container post-content&quot;&gt;
+  &lt;p&gt;
+    Finally! Hello World! It&amp;#8217;s about time something made it to the interwebs from this site&amp;#8230; Even though it still looks pretty bare, I&amp;#8217;m kinda digging the clean look of this CMS. You can find it on &lt;a href=&quot;https://github.com/anchorcms/anchor-cms&quot;&gt;https://github.com/anchorcms/anchor-cms&lt;/a&gt; if you&amp;#8217;re interested.
+  &lt;/p&gt;
+  
+  &lt;p&gt;
+    For the record, I&amp;#8217;m beginning somewhat of a journey (late as it may be) of working with cloud enabled services for my employer. My group has been tasked with moving a shitload of applications (600+) into the ever-changing cloud. Some homegrown Java and Python apps and some prepackaged and licensed by those huge corporations (you know the ones I&amp;#8217;m talking about). I figure I&amp;#8217;m gonna learn a lot and make a ton of mistakes. What better way to immortalize my successes and failures than to share with other nerds like me.
+  &lt;/p&gt;
+  
+  &lt;p&gt;
+    I&amp;#8217;m going to try to document as many adventures I come across regarding tools, automation and technologies used in cloud services and whatever interesting past, present and future experiences. I&amp;#8217;m aiming at being as platform agnostic as possible since I may not have a choice about the application that gets to move next. Hopefully I can come up with some good knowledge to share but first, I decided to start right here with this site, which is fully operational in AWS.
+  &lt;/p&gt;
+  
+  &lt;p&gt;
+    I&amp;#8217;m woking on getting an SSL cert for this site thats actually trusted but for now I&amp;#8217;m gonna get by with a busted self-signed cert. I came across a few services that offer free SSL but as you might imagine, they all have advantages and drawbacks.
+  &lt;/p&gt;
+  
+  &lt;p&gt;
+    Here are a few I&amp;#8217;m considering:
+  &lt;/p&gt;
+  
+  &lt;ul&gt;
+    &lt;li&gt;
+      &lt;a href=&quot;http://www.cacert.org/&quot;&gt;http://www.cacert.org/&lt;/a&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+      &lt;a href=&quot;https://www.startssl.com/&quot;&gt;https://www.startssl.com/&lt;/a&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+      &lt;a href=&quot;https://www.instantssl.com/free-ssl-certificate.html&quot;&gt;https://www.instantssl.com/free-ssl-certificate.html&lt;/a&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+  
+  &lt;p&gt;
+    Some of these only give you a 30 or 90 day trial certificate which is a good start but Im looking for something more permanent considering the frugality this site will be shooting for&amp;#8230; $0
+  &lt;/p&gt;
+  
+  &lt;p&gt;
+    I also ran across this interesting project with appears to be quite promising:
+  &lt;/p&gt;
+  
+  &lt;p&gt;
+    &lt;a href=&quot;https://letsencrypt.org/&quot;&gt;https://letsencrypt.org/&lt;/a&gt;
+  &lt;/p&gt;
+  
+  &lt;p&gt;
+    It&amp;#8217;s backed by some big name sponsors like the Linux Foundation and promises to be open. It&amp;#8217;s not officially available until sometime in the middle of 2015 but it&amp;#8217;s on the right track.
+  &lt;/p&gt;
+  
+  &lt;p&gt;
+    That&amp;#8217;s all I got for now&amp;#8230;
+  &lt;/p&gt;
+&lt;/div&gt;
+</description>
+                <link>https://invisiblerobots.org/2015/05/20/the-blogs-up/</link>
+                <guid>https://invisiblerobots.org/2015/05/20/the-blogs-up</guid>
+                <pubDate>Tue, 19 May 2015 22:10:26 -0400</pubDate>
+        </item>
+
+
+</channel>
+</rss>

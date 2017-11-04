@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <link rel="stylesheet" href="/assets/css/normalize.css"/>
+  <link rel="stylesheet" href="/assets/css/bulma.css"/>
+  <link rel="stylesheet" href="/assets/css/custom.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/images/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+
+  <title>
+    
+      The blog&#8217;s up! &middot; .invisible.robots
+    
+  </title>
+
+</head>
+
+
+<body>
+
+<section class="hero is-dark">
+  <div class="hero-body">
+    <div class="container">
+        <h1 class="title">
+          <span class="typewrite" data-period="2000" data-type='[ ".invisible", ".robots"]'>
+            <span class="wrap"></span>
+          </span>
+        </h1>
+      <h4 class="subtitle" id="quote">
+      </h4>
+    </div>
+  </div>
+</section>
+
+<div class="main-container">
+  <div class="tile is-ancestor is-vertical">
+
+
+    <nav class="nav has-shadow">
+
+      <div class="nav-left">
+
+        <a href="/" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-home" aria-hidden="true" title="Homepage"></i>
+          </span>
+        </a>
+
+        <a href="https://github.com/robruma" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-github" aria-hidden="true" title="Github"></i>
+          </span>
+        </a>
+
+        <div class="nav-item" id="searchFieldNav">
+          <div class="field has-addons">
+            <p class="control">
+              <input class="input is-small" type="text" placeholder="Find an article" id="search-text">
+            </p>
+            <p class="control">
+              <a class="button is-dark is-small" onclick="searchHandler();">
+                Search
+              </a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="nav-right nav-menu" id='nav-menu'>
+        <a href="/archive" class="nav-item">Archive</a>
+        <a href="/tags" class="nav-item">Tags</a>
+      </div>
+
+      <span class="nav-toggle" id="nav-toggle">
+          <span></span>
+          <span></span>
+          <span></span>
+    </nav>
+
+    <div class="tile is-parent">
+      <div class="tile is-8 is-child main">
+
+        <div class="box">
+    <h1 class="post-title">The blog&#8217;s up!</h1>
+    <span class="post-meta">20 May, 2015. It was a Wednesday. <a style="color:grey" href="#disqus_thread"></a></span><hr/>
+
+    <span class="post-text"><div class="container post-content">
+  <p>
+    Finally! Hello World! It&#8217;s about time something made it to the interwebs from this site&#8230; Even though it still looks pretty bare, I&#8217;m kinda digging the clean look of this CMS. You can find it on <a href="https://github.com/anchorcms/anchor-cms">https://github.com/anchorcms/anchor-cms</a> if you&#8217;re interested.
+  </p>
+  
+  <p>
+    For the record, I&#8217;m beginning somewhat of a journey (late as it may be) of working with cloud enabled services for my employer. My group has been tasked with moving a shitload of applications (600+) into the ever-changing cloud. Some homegrown Java and Python apps and some prepackaged and licensed by those huge corporations (you know the ones I&#8217;m talking about). I figure I&#8217;m gonna learn a lot and make a ton of mistakes. What better way to immortalize my successes and failures than to share with other nerds like me.
+  </p>
+  
+  <p>
+    I&#8217;m going to try to document as many adventures I come across regarding tools, automation and technologies used in cloud services and whatever interesting past, present and future experiences. I&#8217;m aiming at being as platform agnostic as possible since I may not have a choice about the application that gets to move next. Hopefully I can come up with some good knowledge to share but first, I decided to start right here with this site, which is fully operational in AWS.
+  </p>
+  
+  <p>
+    I&#8217;m woking on getting an SSL cert for this site thats actually trusted but for now I&#8217;m gonna get by with a busted self-signed cert. I came across a few services that offer free SSL but as you might imagine, they all have advantages and drawbacks.
+  </p>
+  
+  <p>
+    Here are a few I&#8217;m considering:
+  </p>
+  
+  <ul>
+    <li>
+      <a href="http://www.cacert.org/">http://www.cacert.org/</a>
+    </li>
+    <li>
+      <a href="https://www.startssl.com/">https://www.startssl.com/</a>
+    </li>
+    <li>
+      <a href="https://www.instantssl.com/free-ssl-certificate.html">https://www.instantssl.com/free-ssl-certificate.html</a>
+    </li>
+  </ul>
+  
+  <p>
+    Some of these only give you a 30 or 90 day trial certificate which is a good start but Im looking for something more permanent considering the frugality this site will be shooting for&#8230; $0
+  </p>
+  
+  <p>
+    I also ran across this interesting project with appears to be quite promising:
+  </p>
+  
+  <p>
+    <a href="https://letsencrypt.org/">https://letsencrypt.org/</a>
+  </p>
+  
+  <p>
+    It&#8217;s backed by some big name sponsors like the Linux Foundation and promises to be open. It&#8217;s not officially available until sometime in the middle of 2015 but it&#8217;s on the right track.
+  </p>
+  
+  <p>
+    That&#8217;s all I got for now&#8230;
+  </p>
+</div>
+</span>
+</div>
+
+<!--<div class="box">-->
+    <!-- google ads code box -->
+<!--</div>-->
+
+
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_developer = 1;
+    var disqus_shortname = 'robruma'; // required: replace example with your forum shortname
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+      </div>
+
+      <div class="tile is-4 is-child">
+        <div class="tile is-parent is-vertical sidebar">
+
+          <div class="tile is-child widget">
+
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recent Posts
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                  
+                  <li><a href="/jekyll/update/2017/10/welcome-to-jekyll.html">
+                    Welcome to Jekyll!
+                  </a></li>
+                  
+                  <li><a href="/2017/06/24/finding-aws-cfn-bootstrap-hidden-selinux-violations/">
+                    Finding aws-cfn-bootstrap hidden SELinux violations
+                  </a></li>
+                  
+                  <li><a href="/2017/05/23/caring-for-pets-in-the-cloud/">
+                    Caring for Pets in the Cloud
+                  </a></li>
+                  
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Sponsored
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <img src="/assets/images/Dust_Bunny.jpg"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          -->
+
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recommended Websites
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                    <li>
+                      <a href="http://someguyontheinter.net" target="_blank">someguyontheinter.net</a>
+                    </li>
+                    <li>
+                      <a href="http://blog.ob3y.com" target="_blank">blog.ob3y.com</a>
+                    </li>
+                    <li>
+                      <a href="http://backdrift.org" target="_blank">backdrift.org</a>
+                    </li>
+                    <li>
+                      <a href="http://agperson.com" target="_blank">agperson.com</a>
+                    </li>
+                    <li>
+                      <a href="http://greptilian.com" target="_blank">greptilian.com</a>
+                    </li>
+                    <li>
+                      <a href="https://aws.amazon.com/blogs/aws/" target="_blank">aws.amazon.com/blogs/aws/</a>
+                    </li>
+                    <li>
+                      <a href="https://puppetlabs.com/blog" target="_blank">puppetlabs.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="http://www.ansible.com/blog" target="_blank">ansible.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="https://saltstack.com/blog/"  target="_blank">saltstack.com/blog/</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        Some rights reserved.
+      </p>
+      <p>
+        Made with <i class="fa fa-heart"></i> <a href="https://github.com/jgthms/bulma">Bulma</a> and <a href="https://jekyllrb.com/">Jekyll</a>. Hosted on <a href="https://github.com/">Github</a>
+      </p>
+      <p>
+        <a class="icon" href="https://github.com/robruma">
+          <i class="fa fa-github" title="Github"></i>
+        </a>
+        <a class="icon" href="https://www.linkedin.com/in/robruma">
+          <i class="fa fa-linkedin" title="Linkedin"></i>
+        </a>
+        <a class="icon" href="https://twitter.com/robruma">
+          <i class="fa fa-twitter" title="Twitter"></i>
+        </a>
+        <!--
+        <a class="icon" href="mailto:rob@invisiblerobots.org">
+          <i class="fa fa-envelope" title="Email"></i>
+        </a>
+        -->
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- js -->
+<script src="/assets/js/custom.js"></script>
+<script src="/assets/js/typewriter.js"></script>
+</body>
+</html>

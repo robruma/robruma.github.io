@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <link rel="stylesheet" href="/assets/css/normalize.css"/>
+  <link rel="stylesheet" href="/assets/css/bulma.css"/>
+  <link rel="stylesheet" href="/assets/css/custom.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/images/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+
+  <title>
+    
+      Junk Mail Street Cred &middot; .invisible.robots
+    
+  </title>
+
+</head>
+
+
+<body>
+
+<section class="hero is-dark">
+  <div class="hero-body">
+    <div class="container">
+        <h1 class="title">
+          <span class="typewrite" data-period="2000" data-type='[ ".invisible", ".robots"]'>
+            <span class="wrap"></span>
+          </span>
+        </h1>
+      <h4 class="subtitle" id="quote">
+      </h4>
+    </div>
+  </div>
+</section>
+
+<div class="main-container">
+  <div class="tile is-ancestor is-vertical">
+
+
+    <nav class="nav has-shadow">
+
+      <div class="nav-left">
+
+        <a href="/" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-home" aria-hidden="true" title="Homepage"></i>
+          </span>
+        </a>
+
+        <a href="https://github.com/robruma" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-github" aria-hidden="true" title="Github"></i>
+          </span>
+        </a>
+
+        <div class="nav-item" id="searchFieldNav">
+          <div class="field has-addons">
+            <p class="control">
+              <input class="input is-small" type="text" placeholder="Find an article" id="search-text">
+            </p>
+            <p class="control">
+              <a class="button is-dark is-small" onclick="searchHandler();">
+                Search
+              </a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="nav-right nav-menu" id='nav-menu'>
+        <a href="/archive" class="nav-item">Archive</a>
+        <a href="/tags" class="nav-item">Tags</a>
+      </div>
+
+      <span class="nav-toggle" id="nav-toggle">
+          <span></span>
+          <span></span>
+          <span></span>
+    </nav>
+
+    <div class="tile is-parent">
+      <div class="tile is-8 is-child main">
+
+        <div class="box">
+    <h1 class="post-title">Junk Mail Street Cred</h1>
+    <span class="post-meta">5 June, 2015. It was a Friday. <a style="color:grey" href="#disqus_thread"></a></span><hr/>
+
+    <span class="post-text"><p>This complication began when I wanted to setup a Postfix mail system for this site and I figured I didn’t want to manage any users or mailboxes. I had this idea to only setup an inbound Postfix relay with local-only access. However, I only intended to use aliases pointing to external addresses with actual mailboxes to keep from storing mail on the instances. It was no surprise that I ran into a problem where some mail was getting dropped.</p>
+
+<p>It’s about a 50/50 shot at sending email from an ec2 instance and having it arrive at the intended destination. I’m pretty sure most mail systems will spam tag an ec2 based message relay unless it originates from the instance. I believe one of the reasons ec2 relayed messages are tagged as spam stems from the remote mail systems client restrictions performing a reverse DNS check on the origin. An AWS instance will always have functional forward and reverse DNS but with a relay through an AWS resource (instance or ELB), the reverse DNS will always be authoritative to Amazon and therefore never resolve to a delegated domain in Route 53. I think there are some hoops you can jump through with Amazon to lift some of the restrictions by using an EIP <a href="https://forums.aws.amazon.com/thread.jspa?messageID=351288">yada yada yada…</a> This all seemed like an interesting exercise but I was not thrilled at the notion of using an EIP on a dedicated instance strictly for relaying mail.</p>
+
+<p>What I ended up configuring was a seemingly solid email system comprised of Postfix, Postgrey and Amazon SES that I can terminate and rebuild whenever I like. I say “seemingly” because it has not been battle tested for very long so far but it has potential to be pretty bulletproof. And, by using CloudFormation and Auto Scaling groups, all these instances essentially become <a href="http://cloudscaling.com/blog/cloud-computing/pets-vs-cattle-the-elastic-cloud-story/">ephemeral</a>.</p>
+
+<p>Amazon SES can be used as, basically, a <a href="http://en.wikipedia.org/wiki/Smart_host">smart host</a> when email is either being relayed or generated from an ec2 instance. Although, you need to verify each email address and/or domain you intend to be delivering to. Here is a straightforward how-to for Postfix:</p>
+
+<p><a href="https://docs.aws.amazon.com/ses/latest/DeveloperGuide/postfix.html" target="_blank">https://docs.aws.amazon.com/ses/latest/DeveloperGuide/postfix.html</a></p>
+
+<p>SES can also set up the necessary DNS entries for SPF and DKIM automatically in Route 53 for the domain in question. If the domain isn’t delegated to Route 53, SES will allow you to download the proper syntax for the records to be created wherever you’re hosting DNS.</p>
+
+<p>I also didn’t want to be a bad interweb citizen and a potential spam target so I added a few restrictions and greylisting:</p>
+
+<p><a href="http://wiki.centos.org/HowTos/postfix_restrictions">http://wiki.centos.org/HowTos/postfix_restrictions</a></p>
+
+<p><a href="http://wiki.centos.org/HowTos/postgrey">http://wiki.centos.org/HowTos/postgrey</a></p>
+
+<p>For the lazy and the Googlers, here’s part of the UserData I used to configure the mail hosts:</p>
+
+<pre>yum -y install postfix postfix-perl-scripts postgrey mailx
+yum -y remove sendmail
+
+perl -pi -e 's/^inet_interfaces = localhost$/#inet_interfaces = localhost/g' /etc/postfix/main.cf
+perl -pi -e 's/^#inet_interfaces = all$/inet_interfaces = all/g' /etc/postfix/main.cf
+perl -pi -e 's/^#myhostname = virtual.domain.tld$/myhostname = invisiblerobots.org/g' /etc/postfix/main.cf
+perl -pi -e 's/^#mydomain = domain.tld$/mydomain = invisiblerobots.org/g' /etc/postfix/main.cf
+perl -pi -e 's/^#myorigin = \$mydomain$/myorigin = \$mydomain/g' /etc/postfix/main.cf
+perl -pi -e 's/^mydestination = \$myhostname,\slocalhost.\$mydomain,\slocalhost$/mydestination = \$myhostname, localhost.\$mydomain, localhost, \$mydomain/g' /etc/postfix/main.cf
+perl -pi -e 's/^#mynetworks\_style = host$/mynetworks\_style = host/g' /etc/postfix/main.cf
+perl -pi -e 's/^\s+-o smtp_fallback_relay=$/#       -o smtp_fallback_relay=/g' /etc/postfix/master.cf
+
+ # Add aliases here
+cat &lt;&lt; EOF &gt;&gt; /etc/aliases
+someone:        someone@example.org
+EOF
+newaliases
+
+cat &lt;&lt; EOF &gt;&gt; /etc/postfix/main.cf
+
+ # SES relayhost
+relayhost = [${SESEndpoint}]:25
+
+ # Inbound/outbound TLS config
+smtpd_use_tls = yes
+smtpd_tls_cert_file = /etc/pki/tls/certs/localhost.crt
+smtpd_tls_key_file = $smtpd_tls_cert_file
+smtp_tls_CAfile = /etc/ssl/certs/ca-bundle.crt
+smtpd_tls_received_header = yes
+smtpd_tls_session_cache_timeout = 3600s
+smtp_sasl_auth_enable = yes
+smtp_sasl_security_options = noanonymous
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_use_tls = yes
+smtp_tls_security_level = encrypt
+smtp_tls_note_starttls_offer = yes
+tls_random_source = dev:/dev/urandom
+
+ # SMTP HELO restrictions
+smtpd_delay_reject = yes
+smtpd_helo_required = yes
+smtpd_helo_restrictions =
+    permit_mynetworks,
+    reject_non_fqdn_helo_hostname,
+    reject_invalid_helo_hostname,
+    permit
+
+ # SMTP sender restrictions
+smtpd_sender_restrictions =
+    permit_mynetworks,
+    reject_non_fqdn_sender,
+    reject_unknown_sender_domain,
+    permit
+
+ # SMTP client restrictions
+smtpd_recipient_restrictions =
+   reject_unauth_pipelining,
+   reject_non_fqdn_recipient,
+   reject_unknown_recipient_domain,
+   permit_mynetworks,
+   reject_unauth_destination,
+   check_sender_access
+         hash:/etc/postfix/sender_access,
+   reject_rbl_client zen.spamhaus.org,
+   reject_rbl_client bl.spamcop.net,
+   check_policy_service unix:postgrey/socket,
+   permit
+EOF
+
+cat &lt;&lt; EOF &gt; /etc/postfix/sasl_passwd
+[${SESEndpoint}]:25 ${SESUser}:${SESPassword}
+EOF
+postmap hash:/etc/postfix/sasl_passwd
+chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+
+cat &lt;&lt; EOF &gt; /etc/postfix/sender_access
+ #
+ # Black/Whitelist for senders matching the 'MAIL FROM' field. Examples...
+ #
+ #myfriend@example.com    OK
+ #junk@spam.com           REJECT
+ #marketing@              REJECT
+ #theboss@                OK
+ #deals.marketing.com     REJECT
+ #somedomain.com          OK
+EOF
+postmap hash:/etc/postfix/sender_access
+chown root:root /etc/postfix/sender_access /etc/postfix/sender_access.db
+chmod 0600 /etc/postfix/sender_access /etc/postfix/sender_access.db
+
+cat &lt;&lt; EOF &gt; /etc/sysconfig/postgrey
+OPTIONS="--unix=/var/spool/postfix/postgrey/socket --delay=60"
+EOF
+
+service postgrey start
+chkconfig postgrey on
+service postfix start
+chkconfig postfix on</pre>
+
+<p>Update:</p>
+
+<p>As of 9/28/15, AWS <a href="https://aws.amazon.com/blogs/aws/new-receive-and-process-incoming-email-with-amazon-ses/">released</a> a new feature of SES that allows receiving inbound email which makes this process outdated to a certain extent. It can still be used to send email that originates from an instance to ensure it is free of spam.</p>
+
+<p>Although, you should probably ensure you are not listening for inbound SMTP connections anymore.</p>
+
+<p>Remove the following lines from the above example:</p>
+
+<pre>perl -pi -e 's/^inet_interfaces = localhost$/#inet_interfaces = localhost/g' /etc/postfix/main.cf
+perl -pi -e 's/^#inet_interfaces = all$/inet_interfaces = all/g' /etc/postfix/main.cf
+</pre>
+</span>
+</div>
+
+<!--<div class="box">-->
+    <!-- google ads code box -->
+<!--</div>-->
+
+
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_developer = 1;
+    var disqus_shortname = 'robruma'; // required: replace example with your forum shortname
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+      </div>
+
+      <div class="tile is-4 is-child">
+        <div class="tile is-parent is-vertical sidebar">
+
+          <div class="tile is-child widget">
+
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recent Posts
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                  
+                  <li><a href="/jekyll/update/2017/10/welcome-to-jekyll.html">
+                    Welcome to Jekyll!
+                  </a></li>
+                  
+                  <li><a href="/2017/06/24/finding-aws-cfn-bootstrap-hidden-selinux-violations/">
+                    Finding aws-cfn-bootstrap hidden SELinux violations
+                  </a></li>
+                  
+                  <li><a href="/2017/05/23/caring-for-pets-in-the-cloud/">
+                    Caring for Pets in the Cloud
+                  </a></li>
+                  
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Sponsored
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <img src="/assets/images/Dust_Bunny.jpg"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          -->
+
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recommended Websites
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                    <li>
+                      <a href="http://someguyontheinter.net" target="_blank">someguyontheinter.net</a>
+                    </li>
+                    <li>
+                      <a href="http://blog.ob3y.com" target="_blank">blog.ob3y.com</a>
+                    </li>
+                    <li>
+                      <a href="http://backdrift.org" target="_blank">backdrift.org</a>
+                    </li>
+                    <li>
+                      <a href="http://agperson.com" target="_blank">agperson.com</a>
+                    </li>
+                    <li>
+                      <a href="http://greptilian.com" target="_blank">greptilian.com</a>
+                    </li>
+                    <li>
+                      <a href="https://aws.amazon.com/blogs/aws/" target="_blank">aws.amazon.com/blogs/aws/</a>
+                    </li>
+                    <li>
+                      <a href="https://puppetlabs.com/blog" target="_blank">puppetlabs.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="http://www.ansible.com/blog" target="_blank">ansible.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="https://saltstack.com/blog/"  target="_blank">saltstack.com/blog/</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        Some rights reserved.
+      </p>
+      <p>
+        Made with <i class="fa fa-heart"></i> <a href="https://github.com/jgthms/bulma">Bulma</a> and <a href="https://jekyllrb.com/">Jekyll</a>. Hosted on <a href="https://github.com/">Github</a>
+      </p>
+      <p>
+        <a class="icon" href="https://github.com/robruma">
+          <i class="fa fa-github" title="Github"></i>
+        </a>
+        <a class="icon" href="https://www.linkedin.com/in/robruma">
+          <i class="fa fa-linkedin" title="Linkedin"></i>
+        </a>
+        <a class="icon" href="https://twitter.com/robruma">
+          <i class="fa fa-twitter" title="Twitter"></i>
+        </a>
+        <!--
+        <a class="icon" href="mailto:rob@invisiblerobots.org">
+          <i class="fa fa-envelope" title="Email"></i>
+        </a>
+        -->
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- js -->
+<script src="/assets/js/custom.js"></script>
+<script src="/assets/js/typewriter.js"></script>
+</body>
+</html>

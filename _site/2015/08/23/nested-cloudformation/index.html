@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <link rel="stylesheet" href="/assets/css/normalize.css"/>
+  <link rel="stylesheet" href="/assets/css/bulma.css"/>
+  <link rel="stylesheet" href="/assets/css/custom.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/images/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+
+  <title>
+    
+      Nested CloudFormation &middot; .invisible.robots
+    
+  </title>
+
+</head>
+
+
+<body>
+
+<section class="hero is-dark">
+  <div class="hero-body">
+    <div class="container">
+        <h1 class="title">
+          <span class="typewrite" data-period="2000" data-type='[ ".invisible", ".robots"]'>
+            <span class="wrap"></span>
+          </span>
+        </h1>
+      <h4 class="subtitle" id="quote">
+      </h4>
+    </div>
+  </div>
+</section>
+
+<div class="main-container">
+  <div class="tile is-ancestor is-vertical">
+
+
+    <nav class="nav has-shadow">
+
+      <div class="nav-left">
+
+        <a href="/" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-home" aria-hidden="true" title="Homepage"></i>
+          </span>
+        </a>
+
+        <a href="https://github.com/robruma" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-github" aria-hidden="true" title="Github"></i>
+          </span>
+        </a>
+
+        <div class="nav-item" id="searchFieldNav">
+          <div class="field has-addons">
+            <p class="control">
+              <input class="input is-small" type="text" placeholder="Find an article" id="search-text">
+            </p>
+            <p class="control">
+              <a class="button is-dark is-small" onclick="searchHandler();">
+                Search
+              </a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="nav-right nav-menu" id='nav-menu'>
+        <a href="/archive" class="nav-item">Archive</a>
+        <a href="/tags" class="nav-item">Tags</a>
+      </div>
+
+      <span class="nav-toggle" id="nav-toggle">
+          <span></span>
+          <span></span>
+          <span></span>
+    </nav>
+
+    <div class="tile is-parent">
+      <div class="tile is-8 is-child main">
+
+        <div class="box">
+    <h1 class="post-title">Nested CloudFormation</h1>
+    <span class="post-meta">23 August, 2015. It was a Sunday. <a style="color:grey" href="#disqus_thread"></a></span><hr/>
+
+    <span class="post-text"><p>It’s been a while since the last post, partially because I’m lazy. But also, life has been busy. I switched the site to a new <a href="https://github.com/robruma/ansible-wordpress" target="_blank">CMS</a> and <a href="https://theme.wordpress.com/themes/satellite/" target="_blank">theme</a> and a new way to <a href="http://www.google.com/adsense" target="_blank">pay the bills.</a> I’ve realized there’s no way to sustain this site effectively without some way to pay for the AWS resources once the free tier year is over. So, click some ads so I can keep it running!</p>
+
+<p>Anyway, one of the changes you may not have noticed is the use of <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-stack.html" target="_blank">nested CloudFormation stacks</a> to build the site’s necessary resources in AWS. Nested stacks are basically a way to <em>“resourceify”</em> an entire stack so other stacks can use, or <a href="https://en.wikipedia.org/wiki/Reusability" target="_blank">reuse</a> the output attribute information as parameter values to other stacks. This allows you to “chain” stacks together that are <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-dependson.html" target="_blank">dependent</a> on one another so you can modularize the function of the stack. You can have a base-level resource stack that creates all the necessary security groups, the ELB and any Route 53 records which <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html" target="_blank">outputs</a> the resource names. The next stack, say a stack that creates an RDS, can use these outputs with a <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html" target="_blank"><code>Fn::GetAtt</code> function</a> as parameter values. And so on…</p>
+
+<p>“Can’t you just create one gigantic stack so you don’t need to go though all this horseshit”, you ask?</p>
+
+<p>I’m glad you asked! Yeah, you can write up one monolithic stack, within <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html" target="_blank">limits</a>, that creates all the resources you need and orders the dependencies correctly. However, what happens when you want to change or update a resource? e.g. Change a password or modify a security group or utilize a new feature of a resource. You can certainly parameterize the stack to make it easier, but issuing an <code class="highlighter-rouge">&lt;a href="http://docs.aws.amazon.com/cli/latest/reference/cloudformation/update-stack.html" target="_blank"&gt;update-stack&lt;/a&gt;</code> on a stack sometimes has unforeseen effects, like inadvertently recreating an RDS because you updated a property that required <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks.html" target="_blank">replacement</a>! Yes, this happens.</p>
+
+<p>Updating a top-level stack to change a parameter in a nested stack only updates the stack where you made the change. For instance, I added a new IP to a security group that is applied to the EC2 instances. I updated the top-level stack which updated the base-level stack only, guaranteeing the RDS stack was unaltered. In a sense, this adheres to the <a href="https://en.wikipedia.org/wiki/Principle_of_least_privilege" target="_blank">Principle of Least Privilege</a> by only updating the necessary stacks. Ok, that’s a stretch, but you get my point.</p>
+
+<p>Also, there is value in creating reusable stacks that can be shared among many sites. For instance, a parameterized RDS stack can be hosted in an S3 bucket and reused repeatedly in multiple top-level stacks.</p>
+
+<p>Now imagine this hypothetical situation. Say you manage a large number of applications that all use a MySQL RDS. Then OMG, out of the blue, you read all about a new, nasty security vulnerability with the version of MySQL used on all the applications. Luckily, there is an updated version available but uh oh, it’s a major release. You rush to test the new version and verify all apps can be upgraded. Then you realize you set <code class="highlighter-rouge">AllowMajorVersionUpgrade</code> to <code class="highlighter-rouge">false</code> on all RDS instances built with the stack. Thankfully, you had the foresight to reuse this stack as a nested stack resource so updating this parameter is cake.</p>
+
+<p>The alternative may have been updating each stack individually while cursing like a drunken sailor the entire time. No offense intended to any overindulging cloud engineers with a colorful vocabulary who happen to be working on a boat. It’s pure coincidence.</p>
+
+<p>Examples:</p>
+
+<p><strong>Warning, these <del datetime="2015-08-23T04:00:04+00:00">may</del> will not work as-is</strong></p>
+
+<p>top-level&lt;/p&gt;</p>
+
+<pre>{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CloudFormation top-level stack",
+  "Parameters": {
+    "SSLCertificateId": {
+      "Type": "String",
+      "Description": "The SSL certificate used on the ELB"
+    },
+    "HostedZoneName": {
+      "Type": "String",
+      "Description": "Name of the hosted zone in Route 53"
+    },
+    "KeyName": {
+      "Type": "String",
+      "Description": "Name of the SSH Key used to access the instances"
+    },
+    "EC2InstanceType": {
+      "ConstraintDescription": "Must use a valid instance type",
+      "Type": "String",
+      "Description": "Instance type to use for created Server EC2 instance"
+    },
+    "EC2InstanceName": {
+      "Type": "String",
+      "Description": "Instance name tag for the EC2 instance"
+    },
+    "AutoScalingDesiredCapacity": {
+      "Type": "String",
+      "Description": "Auto Scaling Group desired capacity"
+    },
+    "AutoScalingMinSize": {
+      "Type": "String",
+      "Description": "Auto Scaling Group minimum size"
+    },
+    "AutoScalingMaxSize": {
+      "Type": "String",
+      "Description": "Auto Scaling Group maximum size"
+    },
+    "InstanceAMI": {
+      "ConstraintDescription": "Must be a valid AMI",
+      "Type": "String",
+      "Description": "AMI ID"
+    },
+    "RDSEngine": {
+      "Type": "String",
+      "Description": "The RDS engine type"
+    },
+    "RDSEngineVersion": {
+      "Type": "String",
+      "Description": "The RDS engine version"
+    },
+    "RDSDBName": {
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription": "Must begin with a letter and contain only alphanumeric characters",
+      "Description": "The RDS name",
+      "MaxLength": "64",
+      "MinLength": "1",
+      "Type": "String"
+    },
+    "RDSUsername": {
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription": "Must begin with a letter and contain only alphanumeric characters",
+      "Description": "The RDS admin account username",
+      "MaxLength": "16",
+      "MinLength": "1",
+      "Type": "String"
+    },
+    "RDSPassword": {
+      "ConstraintDescription": "Must contain only alphanumeric characters",
+      "Description": "The RDS admin account password",
+      "MinLength": "1",
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "NoEcho": "true",
+      "MaxLength": "40",
+      "Type": "String"
+    },
+    "RDSDBPrefix": {
+      "Type": "String",
+      "Description": "The RDS table name prefix"
+    },
+    "RDSDBInstanceClass": {
+      "Type": "String",
+      "Description": "The RDS instance class"
+    },
+    "RDSAllocatedStorage": {
+      "Type": "String",
+      "Description": "The size of the storage allocated to the RDS"
+    },
+    "RDSAllowMajorVersionUpgrade": {
+      "Type": "String",
+      "Description": "Whether to allow major version upgrades to the RDS",
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
+    },
+    "RDSAutoMinorVersionUpgrade": {
+      "Type": "String",
+      "Description": "Whether to allow automatic minor version upgrades to the RDS",
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
+    },
+    "RDSPort": {
+      "Type": "String",
+      "Description": "The RDS port"
+    },
+    "BaseStackTemplateURL": {
+      "Type": "String",
+      "Description": "The Base Stack template URL"
+    },
+    "RDSStackTemplateURL": {
+      "Type": "String",
+      "Description": "The RDS Stack template URL"
+    },
+    "EC2StackTemplateURL": {
+      "Type": "String",
+      "Description": "The EC2 Stack template URL"
+    }
+  },
+  "Resources": {
+    "BaseStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Ref": "BaseStackTemplateURL"
+        },
+        "Parameters": {
+          "HostedZoneName": {
+            "Ref": "HostedZoneName"
+          },
+          "SSLCertificateId": {
+            "Ref": "SSLCertificateId"
+          }
+        }
+      }
+    },
+    "RDSStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Ref": "RDSStackTemplateURL"
+        },
+        "Parameters": {
+          "RDSAllocatedStorage": {
+            "Ref": "RDSAllocatedStorage"
+          },
+          "VPCSecurityGroup": {
+            "Fn::GetAtt": [
+              "BaseStack",
+              "Outputs.RDSSGName"
+            ]
+          },
+          "RDSUsername": {
+            "Ref": "RDSUsername"
+          },
+          "RDSPassword": {
+            "Ref": "RDSPassword"
+          },
+          "RDSDBName": {
+            "Ref": "RDSDBName"
+          },
+          "RDSDBInstanceClass": {
+            "Ref": "RDSDBInstanceClass"
+          },
+          "RDSAllowMajorVersionUpgrade": {
+            "Ref": "RDSAllowMajorVersionUpgrade"
+          },
+          "RDSAutoMinorVersionUpgrade": {
+            "Ref": "RDSAutoMinorVersionUpgrade"
+          }
+        }
+      },
+      "DependsOn": "BaseStack"
+    },
+    "EC2Stack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Ref": "EC2StackTemplateURL"
+        },
+        "Parameters": {
+          "WebInstanceProfile": {
+            "Fn::GetAtt": [
+              "BaseStack",
+              "Outputs.WebInstanceProfileName"
+            ]
+          },
+          "RDSUsername": {
+            "Ref": "RDSUsername"
+          },
+          "RDSEndpointAddress": {
+            "Fn::GetAtt": [
+              "RDSStack",
+              "Outputs.RDSEndpointAddress"
+            ]
+          },
+          "Environment": {
+            "Ref": "Environment"
+          },
+          "RDSPassword": {
+            "Ref": "RDSPassword"
+          },
+          "SSLCertificateId": {
+            "Ref": "SSLCertificateId"
+          },
+          "RDSDBName": {
+            "Ref": "RDSDBName"
+          },
+          "AutoScalingMaxSize": {
+            "Ref": "AutoScalingMaxSize"
+          },
+          "HostedZoneName": {
+            "Ref": "HostedZoneName"
+          },
+          "RDSEndpointPort": {
+            "Fn::GetAtt": [
+              "RDSStack",
+              "Outputs.RDSEndpointPort"
+            ]
+          },
+          "KeyName": {
+            "Ref": "KeyName"
+          },
+          "InstanceAMI": {
+            "Ref": "InstanceAMI"
+          },
+          "AutoScalingMinSize": {
+            "Ref": "AutoScalingMinSize"
+          },
+          "WebELB": {
+            "Fn::GetAtt": [
+              "BaseStack",
+              "Outputs.WebELBName"
+            ]
+          },
+          "S3Bucket": {
+            "Fn::GetAtt": [
+              "BaseStack",
+              "Outputs.S3BucketName"
+            ]
+          },
+          "EC2InstanceName": {
+            "Ref": "EC2InstanceName"
+          },
+          "EC2InstanceType": {
+            "Ref": "EC2InstanceType"
+          },
+          "AutoScalingDesiredCapacity": {
+            "Ref": "AutoScalingDesiredCapacity"
+          },
+          "WebSG": {
+            "Fn::GetAtt": [
+              "BaseStack",
+              "Outputs.WebSGName"
+            ]
+          }
+        }
+      },
+      "DependsOn": "RDSStack"
+    }
+  }
+}
+</pre>
+
+<p>base&lt;/p&gt;</p>
+
+<pre>{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Base Resources stack",
+  "Parameters": {
+    "SSLCertificateId": {
+      "Type": "String",
+      "Description": "The SSL certificate used on the ELB"
+    },
+    "HostedZoneName": {
+      "Type": "String",
+      "Description": "Name of the hosted zone in Route 53"
+    }
+  },
+  "Resources": {
+    "WebELBRecordSet": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "HostedZoneName"
+              },
+              "."
+            ]
+          ]
+        },
+        "Comment": "ELB alias resource record set",
+        "AliasTarget": {
+          "HostedZoneId": {
+            "Fn::GetAtt": [
+              "WebELB",
+              "CanonicalHostedZoneNameID"
+            ]
+          },
+          "DNSName": {
+            "Fn::GetAtt": [
+              "WebELB",
+              "CanonicalHostedZoneName"
+            ]
+          }
+        },
+        "Type": "A",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "HostedZoneName"
+              },
+              "."
+            ]
+          ]
+        }
+      },
+      "DependsOn": "WebELB"
+    },
+    "WebSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPCId"
+        },
+        "GroupDescription": "Enable inbound access from the ELB",
+      }
+    },
+    "WebSGIngress80": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "ToPort": "80",
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "ELBSG"
+        },
+        "GroupId": {
+          "Ref": "WebSG"
+        },
+        "FromPort": "80"
+      }
+    },
+    "WebSGIngress443": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "ToPort": "443",
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "ELBSG"
+        },
+        "GroupId": {
+          "Ref": "WebSG"
+        },
+        "FromPort": "443"
+      }
+    },
+    "ELBSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": "80",
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": "80"
+          },
+          {
+            "ToPort": "443",
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": "443"
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCId"
+        },
+        "GroupDescription": "Enable inbound access to the ELB",
+      }
+    },
+    "RDSSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPCId"
+        },
+        "GroupDescription": "Enable inbound access only from the web server security group",
+      }
+    },
+    "RDSSGIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "ToPort": "3306",
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "WebSG"
+        },
+        "GroupId": {
+          "Ref": "RDSSG"
+        },
+        "FromPort": "3306"
+      }
+    },
+    "WebELB": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "HealthCheck": {
+          "HealthyThreshold": "2",
+          "Interval": "30",
+          "Target": "SSL:443",
+          "Timeout": "5",
+          "UnhealthyThreshold": "2"
+        },
+        "CrossZone": "true",
+        "AvailabilityZones": {
+          "Fn::GetAZs": ""
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "ELBSG"
+          }
+        ],
+        "Listeners": [
+          {
+            "InstancePort": "80",
+            "LoadBalancerPort": "80",
+            "Protocol": "HTTP"
+          },
+          {
+            "InstancePort": "443",
+            "Protocol": "HTTPS",
+            "LoadBalancerPort": "443",
+            "SSLCertificateId": {
+              "Ref": "SSLCertificateId"
+            },
+            "InstanceProtocol": "HTTPS"
+          }
+        ]
+      }
+    },
+    "WebELBWWWRecordSet": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "HostedZoneName"
+              },
+              "."
+            ]
+          ]
+        },
+        "Comment": "ELB alias resource record set",
+        "AliasTarget": {
+          "HostedZoneId": {
+            "Fn::GetAtt": [
+              "WebELB",
+              "CanonicalHostedZoneNameID"
+            ]
+          },
+          "DNSName": {
+            "Fn::GetAtt": [
+              "WebELB",
+              "CanonicalHostedZoneName"
+            ]
+          }
+        },
+        "Type": "A",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "www",
+              ".",
+              {
+                "Ref": "HostedZoneName"
+              },
+              "."
+            ]
+          ]
+        }
+      },
+      "DependsOn": "WebELB"
+    }
+  },
+  "Outputs": {
+    "ELBSGName": {
+      "Description": "ELB Security Group name",
+      "Value": {
+        "Ref": "ELBSG"
+      }
+    },
+    "WebSGName": {
+      "Description": "Web Server Security Group name",
+      "Value": {
+        "Ref": "WebSG"
+      }
+    },
+    "RDSSGName": {
+      "Description": "RDS Security Group name",
+      "Value": {
+        "Ref": "RDSSG"
+      }
+    },
+    "WebELBName": {
+      "Description": "Web Server ELB name",
+      "Value": {
+        "Ref": "WebELB"
+      }
+    },
+    "S3BucketName": {
+      "Description": "S3 Bucket name",
+      "Value": {
+        "Ref": "ApplicationName"
+      }
+    }
+  }
+}
+</pre>
+
+<p>rds</p>
+
+<pre>{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "MySQL RDS stack",
+  "Parameters": {
+    "RDSEngine": {
+      "Type": "String",
+      "Description": "The RDS engine type"
+    },
+    "RDSEngineVersion": {
+      "Type": "String",
+      "Description": "The RDS engine version"
+    },
+    "RDSDBName": {
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "Description": "The RDS name",
+      "ConstraintDescription": "Must begin with a letter and contain only alphanumeric characters",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "Type": "String"
+    },
+    "RDSUsername": {
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "Description": "The RDS admin account username",
+      "ConstraintDescription": "Must begin with a letter and contain only alphanumeric characters",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "Type": "String"
+    },
+    "RDSPassword": {
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "ConstraintDescription": "Must contain only alphanumeric characters",
+      "NoEcho": "true",
+      "Description": "The RDS admin account password",
+      "MaxLength": "40",
+      "MinLength": "1",
+      "Type": "String"
+    },
+    "RDSDBPrefix": {
+      "Type": "String",
+      "Description": "The RDS table name prefix"
+    },
+    "RDSDBInstanceClass": {
+      "Type": "String",
+      "Description": "The RDS instance class"
+    },
+    "RDSAllocatedStorage": {
+      "Type": "String",
+      "Description": "The size of the storage allocated to the RDS"
+    },
+    "RDSAllowMajorVersionUpgrade": {
+      "Type": "String",
+      "Description": "Whether to allow major version upgrades to the RDS",
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
+    },
+    "RDSAutoMinorVersionUpgrade": {
+      "Type": "String",
+      "Description": "Whether to allow automatic minor version upgrades to the RDS",
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
+    },
+    "RDSPort": {
+      "Type": "String",
+      "Description": "The RDS port"
+    },
+    "VPCSecurityGroup": {
+      "Type": "String",
+      "Description": "The VPC security group used in the RDS instance"
+    }
+  },
+  "Resources": {
+    "RDSInstance": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBParameterGroupName": {
+          "Ref": "RDSDBParameterGroup"
+        },
+        "PubliclyAccessible": {
+          "Ref": "RDSPubliclyAccessible"
+        },
+        "MasterUsername": {
+          "Ref": "RDSUsername"
+        },
+        "VPCSecurityGroups": [
+          {
+            "Ref": "VPCSecurityGroup"
+          }
+        ],
+        "Engine": {
+          "Ref": "RDSEngine"
+        },
+        "AllowMajorVersionUpgrade": {
+          "Ref": "RDSAllowMajorVersionUpgrade"
+        },
+        "AutoMinorVersionUpgrade": {
+          "Ref": "RDSAutoMinorVersionUpgrade"
+        },
+        "PreferredBackupWindow": {
+          "Ref": "RDSPreferredBackupWindow"
+        },
+        "BackupRetentionPeriod": {
+          "Ref": "RDSBackupRetentionPeriod"
+        },
+        "DBName": {
+          "Ref": "AWS::NoValue"
+        },
+        "PreferredMaintenanceWindow": {
+          "Ref": "RDSPreferredMaintenanceWindow"
+        },
+        "EngineVersion": {
+          "Ref": "RDSEngineVersion"
+        },
+        "DBSubnetGroupName": {
+          "Ref": "RDSDBSubnetGroup"
+        },
+        "StorageType": {
+          "Ref": "RDSStorageType"
+        },
+        "MasterUserPassword": {
+          "Ref": "RDSPassword"
+        },
+        "DBInstanceClass": {
+          "Ref": "RDSDBInstanceClass"
+        },
+        "Port": {
+          "Ref": "RDSPort"
+        },
+        "DBInstanceIdentifier": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "RDSDBName"
+              }
+            ]
+          ]
+        }
+      },
+      "DeletionPolicy": "Snapshot"
+    }
+  },
+  "Outputs": {
+    "RDSInstanceName": {
+      "Description": "RDS database instance name",
+      "Value": {
+        "Ref": "RDSInstance"
+      }
+    },
+    "RDSDBPrefix": {
+      "Description": "RDS database prefix",
+      "Value": {
+        "Ref": "RDSDBPrefix"
+      }
+    },
+    "RDSEndpointAddress": {
+      "Description": "RDS database endpoint address",
+      "Value": {
+        "Fn::GetAtt": [
+          "RDSInstance",
+          "Endpoint.Address"
+        ]
+      }
+    },
+    "RDSEndpointPort": {
+      "Description": "RDS database endpoint port",
+      "Value": {
+        "Fn::GetAtt": [
+          "RDSInstance",
+          "Endpoint.Port"
+        ]
+      }
+    }
+  }
+}
+</pre>
+
+<p>ec2</p>
+
+<pre>{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "EC2 stack",
+  "Parameters": {
+    "KeyName": {
+      "Type": "String",
+      "Description": "Name of the SSH Key used to access the instances"
+    },
+    "S3Bucket": {
+      "Type": "String",
+      "Description": "Name of the S3 Bucket"
+    },
+    "EC2InstanceType": {
+      "ConstraintDescription": "Must use a valid instance type",
+      "Type": "String",
+      "Description": "Instance type to use for the EC2 instance"
+    },
+    "EC2InstanceName": {
+      "Type": "String",
+      "Description": "Instance name tag for the EC2 instance"
+    },
+    "AutoScalingDesiredCapacity": {
+      "Type": "String",
+      "Description": "Auto Scaling Group desired capacity"
+    },
+    "AutoScalingMinSize": {
+      "Type": "String",
+      "Description": "Auto Scaling Group minimum size"
+    },
+    "AutoScalingMaxSize": {
+      "Type": "String",
+      "Description": "Auto Scaling Group maximum size"
+    },
+    "SSLCertificateId": {
+      "Type": "String",
+      "Description": "The SSL certificate used on the ELB"
+    },
+    "InstanceAMI": {
+      "ConstraintDescription": "Must be a valid AMI",
+      "Type": "String",
+      "Description": "AMI ID"
+    },
+    "HostedZoneName": {
+      "Type": "String",
+      "Description": "Name of the hosted zone in Route 53"
+    },
+    "RDSEndpointAddress": {
+      "Type": "String",
+      "Description": "The RDS endpoint"
+    },
+    "RDSEndpointPort": {
+      "Type": "String",
+      "Description": "The RDS endpoint port"
+    },
+    "RDSDBName": {
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "Description": "The RDS name",
+      "ConstraintDescription": "Must begin with a letter and contain only alphanumeric characters",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "Type": "String"
+    },
+    "RDSUsername": {
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "Description": "The RDS admin account username",
+      "ConstraintDescription": "Must begin with a letter and contain only alphanumeric characters",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "Type": "String"
+    },
+    "RDSPassword": {
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "ConstraintDescription": "Must contain only alphanumeric characters",
+      "NoEcho": "true",
+      "Description": "The RDS admin account password",
+      "MaxLength": "40",
+      "MinLength": "1",
+      "Type": "String"
+    },
+    "RDSDBPrefix": {
+      "Type": "String",
+      "Description": "The RDS table name prefix"
+    },
+    "WebSG": {
+      "Type": "String",
+      "Description": "The web server security group"
+    },
+    "WebELB": {
+      "Type": "String",
+      "Description": "The web server ELB name"
+    },
+    "WebInstanceProfile": {
+      "Type": "String",
+      "Description": "The web server IAM Profile name"
+    }
+  },
+  "Resources": {
+    "WebLaunchConfiguration": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\n",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "export AWS_DEFAULT_REGION=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "/opt/aws/bin/cfn-init -s ",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      " -r WebLaunchConfiguration --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                },
+                ". /etc/cloud-env.sh\n#yum install a bunch of stuff and use cloud-env.sh variables“
+              ]
+            ]
+          }
+        },
+        "ImageId": {
+          "Ref": "InstanceAMI"
+        },
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "WebSG"
+          },
+        ],
+        "IamInstanceProfile": {
+          "Ref": "WebInstanceProfile"
+        },
+        "InstanceType": {
+          "Ref": "EC2InstanceType"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {
+              "/etc/cloud-env.sh": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "export AWSDefaultRegion=",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n",
+                      "export S3Bucket=",
+                      {
+                        "Ref": "S3Bucket"
+                      },
+                      "\n",
+                      "export HostedZoneName=",
+                      {
+                        "Ref": "HostedZoneName"
+                      },
+                      "\n",
+                      "export DBName=",
+                      {
+                        "Ref": "RDSDBName"
+                      },
+                      "\n",
+                      "export DBUsername=",
+                      {
+                        "Ref": "RDSUsername"
+                      },
+                      "\n",
+                      "export DBPassword=",
+                      {
+                        "Ref": "RDSPassword"
+                      },
+                      "\n",
+                      "export DBEndpoint=",
+                      {
+                        "Ref": "RDSEndpointAddress"
+                      },
+                      "\n",
+                      "export DBPort=",
+                      {
+                        "Ref": "RDSEndpointPort"
+                      },
+                      "\n",
+                      "export DBPrefix=",
+                      {
+                        "Ref": "RDSDBPrefix"
+                      },
+                      "\n",
+                      "export INSTANCE_ID=$(/opt/aws/bin/ec2-metadata -i | cut -d ' ' -f 2)\n"
+                    ]
+                  ]
+                },
+                "owner": "root",
+                "group": "root",
+                "mode": "000400"
+              }
+            }
+          }
+        }
+      }
+    },
+    "WebAutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "DesiredCapacity": {
+          "Ref": "AutoScalingDesiredCapacity"
+        },
+        "Tags": [
+          {
+            "PropagateAtLaunch": "true",
+            "Value": {
+              "Fn::Join": [
+                "-",
+                [
+                  {
+                    "Ref": "EC2InstanceName"
+                  }
+                ]
+              ]
+            },
+            "Key": "Name"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "WebLaunchConfiguration"
+        },
+        "MinSize": {
+          "Ref": "AutoScalingMinSize"
+        },
+        "MaxSize": {
+          "Ref": "AutoScalingMaxSize"
+        },
+        "LoadBalancerNames": [
+          {
+            "Ref": "WebELB"
+          }
+        ],
+        "AvailabilityZones": {
+          "Fn::GetAZs": ""
+        }
+      },
+      "DependsOn": "WebLaunchConfiguration"
+    }
+  }
+}
+</pre>
+</span>
+</div>
+
+<!--<div class="box">-->
+    <!-- google ads code box -->
+<!--</div>-->
+
+
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_developer = 1;
+    var disqus_shortname = 'robruma'; // required: replace example with your forum shortname
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+      </div>
+
+      <div class="tile is-4 is-child">
+        <div class="tile is-parent is-vertical sidebar">
+
+          <div class="tile is-child widget">
+
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recent Posts
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                  
+                  <li><a href="/jekyll/update/2017/10/welcome-to-jekyll.html">
+                    Welcome to Jekyll!
+                  </a></li>
+                  
+                  <li><a href="/2017/06/24/finding-aws-cfn-bootstrap-hidden-selinux-violations/">
+                    Finding aws-cfn-bootstrap hidden SELinux violations
+                  </a></li>
+                  
+                  <li><a href="/2017/05/23/caring-for-pets-in-the-cloud/">
+                    Caring for Pets in the Cloud
+                  </a></li>
+                  
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Sponsored
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <img src="/assets/images/Dust_Bunny.jpg"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          -->
+
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recommended Websites
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                    <li>
+                      <a href="http://someguyontheinter.net" target="_blank">someguyontheinter.net</a>
+                    </li>
+                    <li>
+                      <a href="http://blog.ob3y.com" target="_blank">blog.ob3y.com</a>
+                    </li>
+                    <li>
+                      <a href="http://backdrift.org" target="_blank">backdrift.org</a>
+                    </li>
+                    <li>
+                      <a href="http://agperson.com" target="_blank">agperson.com</a>
+                    </li>
+                    <li>
+                      <a href="http://greptilian.com" target="_blank">greptilian.com</a>
+                    </li>
+                    <li>
+                      <a href="https://aws.amazon.com/blogs/aws/" target="_blank">aws.amazon.com/blogs/aws/</a>
+                    </li>
+                    <li>
+                      <a href="https://puppetlabs.com/blog" target="_blank">puppetlabs.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="http://www.ansible.com/blog" target="_blank">ansible.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="https://saltstack.com/blog/"  target="_blank">saltstack.com/blog/</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        Some rights reserved.
+      </p>
+      <p>
+        Made with <i class="fa fa-heart"></i> <a href="https://github.com/jgthms/bulma">Bulma</a> and <a href="https://jekyllrb.com/">Jekyll</a>. Hosted on <a href="https://github.com/">Github</a>
+      </p>
+      <p>
+        <a class="icon" href="https://github.com/robruma">
+          <i class="fa fa-github" title="Github"></i>
+        </a>
+        <a class="icon" href="https://www.linkedin.com/in/robruma">
+          <i class="fa fa-linkedin" title="Linkedin"></i>
+        </a>
+        <a class="icon" href="https://twitter.com/robruma">
+          <i class="fa fa-twitter" title="Twitter"></i>
+        </a>
+        <!--
+        <a class="icon" href="mailto:rob@invisiblerobots.org">
+          <i class="fa fa-envelope" title="Email"></i>
+        </a>
+        -->
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- js -->
+<script src="/assets/js/custom.js"></script>
+<script src="/assets/js/typewriter.js"></script>
+</body>
+</html>

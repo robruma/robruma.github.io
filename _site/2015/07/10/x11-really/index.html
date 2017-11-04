@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <link rel="stylesheet" href="/assets/css/normalize.css"/>
+  <link rel="stylesheet" href="/assets/css/bulma.css"/>
+  <link rel="stylesheet" href="/assets/css/custom.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/images/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+
+  <title>
+    
+      X11… Really? &middot; .invisible.robots
+    
+  </title>
+
+</head>
+
+
+<body>
+
+<section class="hero is-dark">
+  <div class="hero-body">
+    <div class="container">
+        <h1 class="title">
+          <span class="typewrite" data-period="2000" data-type='[ ".invisible", ".robots"]'>
+            <span class="wrap"></span>
+          </span>
+        </h1>
+      <h4 class="subtitle" id="quote">
+      </h4>
+    </div>
+  </div>
+</section>
+
+<div class="main-container">
+  <div class="tile is-ancestor is-vertical">
+
+
+    <nav class="nav has-shadow">
+
+      <div class="nav-left">
+
+        <a href="/" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-home" aria-hidden="true" title="Homepage"></i>
+          </span>
+        </a>
+
+        <a href="https://github.com/robruma" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-github" aria-hidden="true" title="Github"></i>
+          </span>
+        </a>
+
+        <div class="nav-item" id="searchFieldNav">
+          <div class="field has-addons">
+            <p class="control">
+              <input class="input is-small" type="text" placeholder="Find an article" id="search-text">
+            </p>
+            <p class="control">
+              <a class="button is-dark is-small" onclick="searchHandler();">
+                Search
+              </a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="nav-right nav-menu" id='nav-menu'>
+        <a href="/archive" class="nav-item">Archive</a>
+        <a href="/tags" class="nav-item">Tags</a>
+      </div>
+
+      <span class="nav-toggle" id="nav-toggle">
+          <span></span>
+          <span></span>
+          <span></span>
+    </nav>
+
+    <div class="tile is-parent">
+      <div class="tile is-8 is-child main">
+
+        <div class="box">
+    <h1 class="post-title">X11… Really?</h1>
+    <span class="post-meta">10 July, 2015. It was a Friday. <a style="color:grey" href="#disqus_thread"></a></span><hr/>
+
+    <span class="post-text"><p>Yeah, not exactly an exciting technology that’s making innovative progress in the cloud space. However, I needed to write an article to add to the many solutions posted to the interwebs-at-large regarding the inability to forward X11.</p>
+
+<p>Why, you ask?</p>
+
+<p>There are innumerable amounts of blog posts that detail the many, many error messages possible while trying to open an X11 based application over an ssh connection to a host with a misconfigured X11 client or server, but not many with the seemingly unrelated solution I put in place.</p>
+
+<p>Here’s the problem, I just updated my Air to Mac OSX Yosemite and at about the same time, I rebuilt a test box I used as a DNS server so I had a few variables change at once. When I tried to connect to the box and run various X11 based applications over ssh, I got this:</p>
+
+<pre>$ ssh -Y me@10.0.0.10
+me@10.0.0.10's password: 
+X11 forwarding request failed on channel 0
+Last login: Sat Jun 27 17:49:16 2015 from 10.0.0.34
+[me@my-new-centos-host ~]$ virt-manager 
+[me@my-new-centos-host ~]$ 
+** (virt-manager:16130): WARNING **: Could not open X display
+Gtk couldn't be initialized
+
+[me@my-new-centos-host ~]$ 
+[me@my-new-centos-host ~]$ xterm 
+xterm: Xt error: Can't open display: 
+xterm: DISPLAY is not set
+[me@my-new-centos-host ~]$</pre>
+
+<p>Typical, right?</p>
+
+<p>I thought so too… I then immediately blamed my Air and ran the gamut of Google searches with keywords like “x11 macos yosemite” and “xquartz yosemite” and found a few complaints about XQuartz 2.7.7 falling apart after an upgrade to Yosemite, solution being an upgrade to 2.7.8_rc1.</p>
+
+<p>Nope… didn’t work.</p>
+
+<p>Even some fancy stuff like:</p>
+
+<p>Recreate ~/.Xauthority with a trusted key</p>
+
+<pre>xauth generate $DISPLAY . trusted</pre>
+
+<p>No</p>
+
+<p>Fix the DISPLAY environment variable by adding this to ~/.bashrc</p>
+
+<p> </p>
+
+<pre>alias ssh="ln -fs $(echo $DISPLAY | sed 's:\(/private/tmp/com\.apple\.launchd\.[^/]*\)/.*:\1:') $(echo $DISPLAY | sed 's:/private/tmp/com\.apple\.launchd\.\([^/]*\)/.*:/private/tmp/launch-\1:'); ssh"</pre>
+
+<p>No</p>
+
+<p>Ugh… After determining that the client side was then fine by trying a different box and running xterm (Yeah I know, I should have done this first :/) I focused on the new box as the problem. Again, Google, <code class="highlighter-rouge">centos Can't open display</code> and <code class="highlighter-rouge">centos Gtk couldn't be initialized</code>. Nothing out of the ordinary that wasn’t already setup.</p>
+
+<p>Ensure xauth is installed</p>
+
+<p>xhost + on the host and client</p>
+
+<pre>X11Forwarding yes</pre>
+
+<p>and</p>
+
+<pre>X11UseLocalhost no</pre>
+
+<p>in sshd_config</p>
+
+<p>Bah…</p>
+
+<p>So, I stepped back because it was getting annoying. I then decided to look for some error messages (Yeah I know, I also should have done this first :/). Hmmm, then I found this:</p>
+
+<pre>sshd[8763]: error: Can't get IP address for X11 DISPLAY</pre>
+
+<p>WTH, can’t get IP address… What?</p>
+
+<p>The IP is in the environment variables sent along with the ssh connection…</p>
+
+<p>Why can’t it “get” the IP address for the… Wait… The remote IP or the local IP?</p>
+
+<p>Hmm… What about DNS, Oh yeah, no DNS any more…</p>
+
+<p>What about the hosts file?:</p>
+
+<pre>[me@my-new-centos-host ~]$ cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6</pre>
+
+<p>facepalm…</p>
+
+<p>I added an entry to /etc/hosts and I could once again forward X11 normally:</p>
+
+<pre>my-new-centos-host 10.0.0.10</pre>
+
+<p>I guess adding a DNS entry would have worked too :/</p>
+</span>
+</div>
+
+<!--<div class="box">-->
+    <!-- google ads code box -->
+<!--</div>-->
+
+
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_developer = 1;
+    var disqus_shortname = 'robruma'; // required: replace example with your forum shortname
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+      </div>
+
+      <div class="tile is-4 is-child">
+        <div class="tile is-parent is-vertical sidebar">
+
+          <div class="tile is-child widget">
+
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recent Posts
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                  
+                  <li><a href="/jekyll/update/2017/10/welcome-to-jekyll.html">
+                    Welcome to Jekyll!
+                  </a></li>
+                  
+                  <li><a href="/2017/06/24/finding-aws-cfn-bootstrap-hidden-selinux-violations/">
+                    Finding aws-cfn-bootstrap hidden SELinux violations
+                  </a></li>
+                  
+                  <li><a href="/2017/05/23/caring-for-pets-in-the-cloud/">
+                    Caring for Pets in the Cloud
+                  </a></li>
+                  
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Sponsored
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <img src="/assets/images/Dust_Bunny.jpg"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          -->
+
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recommended Websites
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                    <li>
+                      <a href="http://someguyontheinter.net" target="_blank">someguyontheinter.net</a>
+                    </li>
+                    <li>
+                      <a href="http://blog.ob3y.com" target="_blank">blog.ob3y.com</a>
+                    </li>
+                    <li>
+                      <a href="http://backdrift.org" target="_blank">backdrift.org</a>
+                    </li>
+                    <li>
+                      <a href="http://agperson.com" target="_blank">agperson.com</a>
+                    </li>
+                    <li>
+                      <a href="http://greptilian.com" target="_blank">greptilian.com</a>
+                    </li>
+                    <li>
+                      <a href="https://aws.amazon.com/blogs/aws/" target="_blank">aws.amazon.com/blogs/aws/</a>
+                    </li>
+                    <li>
+                      <a href="https://puppetlabs.com/blog" target="_blank">puppetlabs.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="http://www.ansible.com/blog" target="_blank">ansible.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="https://saltstack.com/blog/"  target="_blank">saltstack.com/blog/</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        Some rights reserved.
+      </p>
+      <p>
+        Made with <i class="fa fa-heart"></i> <a href="https://github.com/jgthms/bulma">Bulma</a> and <a href="https://jekyllrb.com/">Jekyll</a>. Hosted on <a href="https://github.com/">Github</a>
+      </p>
+      <p>
+        <a class="icon" href="https://github.com/robruma">
+          <i class="fa fa-github" title="Github"></i>
+        </a>
+        <a class="icon" href="https://www.linkedin.com/in/robruma">
+          <i class="fa fa-linkedin" title="Linkedin"></i>
+        </a>
+        <a class="icon" href="https://twitter.com/robruma">
+          <i class="fa fa-twitter" title="Twitter"></i>
+        </a>
+        <!--
+        <a class="icon" href="mailto:rob@invisiblerobots.org">
+          <i class="fa fa-envelope" title="Email"></i>
+        </a>
+        -->
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- js -->
+<script src="/assets/js/custom.js"></script>
+<script src="/assets/js/typewriter.js"></script>
+</body>
+</html>

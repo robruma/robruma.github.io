@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <link rel="stylesheet" href="/assets/css/normalize.css"/>
+  <link rel="stylesheet" href="/assets/css/bulma.css"/>
+  <link rel="stylesheet" href="/assets/css/custom.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/assets/images/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+
+  <title>
+    
+      Caring for Pets in the Cloud &middot; .invisible.robots
+    
+  </title>
+
+</head>
+
+
+<body>
+
+<section class="hero is-dark">
+  <div class="hero-body">
+    <div class="container">
+        <h1 class="title">
+          <span class="typewrite" data-period="2000" data-type='[ ".invisible", ".robots"]'>
+            <span class="wrap"></span>
+          </span>
+        </h1>
+      <h4 class="subtitle" id="quote">
+      </h4>
+    </div>
+  </div>
+</section>
+
+<div class="main-container">
+  <div class="tile is-ancestor is-vertical">
+
+
+    <nav class="nav has-shadow">
+
+      <div class="nav-left">
+
+        <a href="/" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-home" aria-hidden="true" title="Homepage"></i>
+          </span>
+        </a>
+
+        <a href="https://github.com/robruma" class="nav-item">
+          <span class="icon">
+            <i class="fa fa-github" aria-hidden="true" title="Github"></i>
+          </span>
+        </a>
+
+        <div class="nav-item" id="searchFieldNav">
+          <div class="field has-addons">
+            <p class="control">
+              <input class="input is-small" type="text" placeholder="Find an article" id="search-text">
+            </p>
+            <p class="control">
+              <a class="button is-dark is-small" onclick="searchHandler();">
+                Search
+              </a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="nav-right nav-menu" id='nav-menu'>
+        <a href="/archive" class="nav-item">Archive</a>
+        <a href="/tags" class="nav-item">Tags</a>
+      </div>
+
+      <span class="nav-toggle" id="nav-toggle">
+          <span></span>
+          <span></span>
+          <span></span>
+    </nav>
+
+    <div class="tile is-parent">
+      <div class="tile is-8 is-child main">
+
+        <div class="box">
+    <h1 class="post-title">Caring for Pets in the Cloud</h1>
+    <span class="post-meta">23 May, 2017. It was a Tuesday. <a style="color:grey" href="#disqus_thread"></a></span><hr/>
+
+    <span class="post-text"><p>Pets vs. Cattle, the widely used <a href="http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/" target="_blank">phrase</a> forming the analogy between servers and animals is used consistently in the IT industry when automating infrastructure deployments or migrating applications to a cloud vendor.</p>
+
+<p><img src="https://i0.wp.com/image.slidesharecdn.com/cloudconnect2012-architectures-for-open-and-scalable-clouds-master-rlb-120216195430-phpapp01/95/architectures-for-open-and-scalable-clouds-20-728.jpg?resize=728%2C546&#038;ssl=1" class="aligncenter size-medium" data-recalc-dims="1" /></p>
+
+<p>As System Engineers, Architects and Developers struggle to turn pets into cattle, the underlying application, more than likely, will not be initially architected to take advantage of scalability features. Features like stateless application architecture takes time to become reality and often overrun the time it takes for infrastructure architecture changes. Immutability of servers is not easy either. It starts with how the application is architected. Then, can leverage multiple layers of infrastructure automation, operating system configuration management, acceptance testing, software deployments, continuous integration, etc…</p>
+
+<p>This may mean expecting extra cost, time and effort when taking a beautifully hand-crafted snowflake application, crossing your fingers and just throwing it into the cloud. Especially if you’re hoping the <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-retirement.html" target="_blank">underlying services</a> continue to function at the <a href="https://aws.amazon.com/message/41926/" target="_blank">guaranteed uptime SLA</a> while concurrent efforts to develop cloud native versions or a potential replacement application begin to take shape.</p>
+
+<p>AWS has answered this situation with <a href="https://aws.amazon.com/blogs/aws/new-auto-recovery-for-amazon-ec2/" target="_blank">AutoRecovery</a> which is preferable to an AutoScaling group set to one desired/max instance. Although, an instance stop/start will move your instance to another host, <a href="https://forums.aws.amazon.com/thread.jspa?threadID=72906" target="_blank">AWS does not support live migration</a>. Caveats include the risk of volume corruption and loss of public IP’s so ensure your instance has an Elastic IP or is behind and ELB and the important data is backed up or <a href="https://aws.amazon.com/answers/infrastructure-management/ebs-snapshot-scheduler/" target="_blank">regular EBS snapshots are taken</a>.</p>
+
+<p>Google Cloud mitigates instance retirement with <a href="https://cloud.google.com/compute/docs/regions-zones/regions-zones#maintenance" target="_blank">Transparent Maintenance</a> which, as the name suggests, is transparent and requires no additional configuration. By default, instances will “live migrate” to healthy hardware but can be configured to “terminate and reboot” if the application requires.</p>
+
+<p>Azure doesn’t seem to have <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/impactful-maintenance" target="_blank">equivalent functionality</a> but has technology in place that enables the underlying virtualization to be updated without a VM reboot, however, will experience a <a href="https://azure.microsoft.com/en-us/updates/azure-in-place-virtual-machine-migration-eliminates-virtual-machine-reboots-during-critical-security-updates-for-host-os/" target="_blank">30 second pause</a>. This does not solve the problem of <a href="https://docs.microsoft.com/en-us/azure/architecture/resiliency/recovery-local-failures" target="_blank">underlying hardware failures</a> which Azure recommends using multiple instances and ensure an <a href="https://azure.microsoft.com/en-us/support/legal/sla/virtual-machines/v1_6/" target="_blank">SLA of 99.9% for single instance deployments</a>.</p>
+
+<p>Be sure to make the right decisions regarding your pets. Research the available options and plan for failure. Turning a kitten into a cow isn’t easy.</p>
+
+<p><a href="https://imgflip.com/i/1pkanm"><img src="https://i2.wp.com/i.imgflip.com/1pkanm.jpg?ssl=1" title="made at imgflip.com" data-recalc-dims="1" /></a></p>
+</span>
+</div>
+
+<!--<div class="box">-->
+    <!-- google ads code box -->
+<!--</div>-->
+
+
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_developer = 1;
+    var disqus_shortname = 'robruma'; // required: replace example with your forum shortname
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+      </div>
+
+      <div class="tile is-4 is-child">
+        <div class="tile is-parent is-vertical sidebar">
+
+          <div class="tile is-child widget">
+
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recent Posts
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                  
+                  <li><a href="/jekyll/update/2017/10/welcome-to-jekyll.html">
+                    Welcome to Jekyll!
+                  </a></li>
+                  
+                  <li><a href="/2017/06/24/finding-aws-cfn-bootstrap-hidden-selinux-violations/">
+                    Finding aws-cfn-bootstrap hidden SELinux violations
+                  </a></li>
+                  
+                  <li><a href="/2017/05/23/caring-for-pets-in-the-cloud/">
+                    Caring for Pets in the Cloud
+                  </a></li>
+                  
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Sponsored
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <img src="/assets/images/Dust_Bunny.jpg"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          -->
+
+          <div class="tile is-child widget">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title nice-title">
+                  Recommended Websites
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content nice-text">
+                  <ul>
+                    <li>
+                      <a href="http://someguyontheinter.net" target="_blank">someguyontheinter.net</a>
+                    </li>
+                    <li>
+                      <a href="http://blog.ob3y.com" target="_blank">blog.ob3y.com</a>
+                    </li>
+                    <li>
+                      <a href="http://backdrift.org" target="_blank">backdrift.org</a>
+                    </li>
+                    <li>
+                      <a href="http://agperson.com" target="_blank">agperson.com</a>
+                    </li>
+                    <li>
+                      <a href="http://greptilian.com" target="_blank">greptilian.com</a>
+                    </li>
+                    <li>
+                      <a href="https://aws.amazon.com/blogs/aws/" target="_blank">aws.amazon.com/blogs/aws/</a>
+                    </li>
+                    <li>
+                      <a href="https://puppetlabs.com/blog" target="_blank">puppetlabs.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="http://www.ansible.com/blog" target="_blank">ansible.com/blog</a>
+                    </li>
+                    <li>
+                      <a href="https://saltstack.com/blog/"  target="_blank">saltstack.com/blog/</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        Some rights reserved.
+      </p>
+      <p>
+        Made with <i class="fa fa-heart"></i> <a href="https://github.com/jgthms/bulma">Bulma</a> and <a href="https://jekyllrb.com/">Jekyll</a>. Hosted on <a href="https://github.com/">Github</a>
+      </p>
+      <p>
+        <a class="icon" href="https://github.com/robruma">
+          <i class="fa fa-github" title="Github"></i>
+        </a>
+        <a class="icon" href="https://www.linkedin.com/in/robruma">
+          <i class="fa fa-linkedin" title="Linkedin"></i>
+        </a>
+        <a class="icon" href="https://twitter.com/robruma">
+          <i class="fa fa-twitter" title="Twitter"></i>
+        </a>
+        <!--
+        <a class="icon" href="mailto:rob@invisiblerobots.org">
+          <i class="fa fa-envelope" title="Email"></i>
+        </a>
+        -->
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- js -->
+<script src="/assets/js/custom.js"></script>
+<script src="/assets/js/typewriter.js"></script>
+</body>
+</html>
