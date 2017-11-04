@@ -35,15 +35,16 @@ document.getElementById("search-text").addEventListener("keydown", function(e) {
 }, false);
 
 function searchHandler() {
-    var searchInput = document.getElementById('search-text');
-    var text = searchInput.value;
+    //var searchInput = document.getElementById('search-text');
+    //var text = searchInput.value;
     // add site:example.com in the placeholder
     //window.location.href = "https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text;
     //window.open("https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text, "_blank");
-    var cx = '007797272485922345229:nrls_zubomg&q=' + text;
+    var cx = '007797272485922345229:nrls_zubomg&q=';
+    var gcse = document.getElementById('search-text');
     gcse.type = 'text/javascript';
     gcse.async = true;
     gcse.src = 'https://cse.google.com/cse.js?cx=' + cx;
     var s = document.getElementsByTagName('search-text')[0];
-    s.parentNode.insertBefore(s);
+    s.parentNode.insertBefore(gcse, s);
 }
