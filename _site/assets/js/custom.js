@@ -38,5 +38,27 @@ function searchHandler() {
     var searchInput = document.getElementById('search-text');
     var text = searchInput.value;
     // add site:example.com in the placeholder
-    window.open("https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text, "_blank");
+    if (text) {
+        //window.location.href = "https://cse.google.com/cse/publicurl?cx=007797272485922345229:nrls_zubomg&q=" + text;
+        var searchForm = $('.input'); // Get the form
+        $(searchForm).submit(function(event) { // Listen for a submission.
+            event.preventDefault(); // Stop the submission from just passing through.
+            var q = $(this).find('input').val(); /* Find the child input field and get its value. */
+
+            // Developer's Note: Update this URL to reflect the proper base for 'live' version!
+           window.location.replace('http://127.0.0.1:4000/search&q=' + q);
+        });
+    }
 }
+
+/*
+(function() {
+    var cx = '007797272485922345229:nrls_zubomg&q=test';
+    var gcse = document.createElement('script');
+    gcse.type = 'text/javascript';
+    gcse.async = true;
+    gcse.src = 'https://cse.google.com/cse.js?cx=' + cx;
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(gcse, s);
+})();
+*/
